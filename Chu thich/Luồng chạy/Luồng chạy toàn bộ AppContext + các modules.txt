@@ -1,0 +1,96 @@
+1️⃣ AppContext (trái tim)
+Provider: AppProvider
+
+State: useReducer(appReducer, initialAppState)
+
+Dispatch: gộp tất cả action từ modules vào root-level AppState
+
+Các luồng state chính:
+
+[NetworkContext] ── isOnline ──► useEffect ──► dispatch(NETWORK/SET_ONLINE)
+[DeviceContext] ── deviceInfo ──► useEffect ──► dispatch(DEVICE/SET_INFO)
+[SettingsContext] ── theme/locale ──► useEffect ──► dispatch(SETTINGS/INIT)
+[UIContext] ── toast ──► useEffect ──► toastService.show() ──► dispatch(UI/CLEAR_TOAST)
+Toast riêng toàn cục (online/offline):
+
+window.addEventListener('online') ──► dispatch(NETWORK/SET_ONLINE true)
+                                  └─► toastService.show("success", "Bạn đã trực tuyến trở lại")
+window.addEventListener('offline') ─► dispatch(NETWORK/SET_ONLINE false)
+                                  └─► toastService.show("error", "Mất kết nối mạng")
+2️⃣ NetworkContext
+navigator.onLine → useState(isOnline)
+window.addEventListener('online/offline') → setIsOnline()
+useMemo → { isOnline } → cung cấp cho AppProvider
+AppContext nhận isOnline qua hook useNetwork → dispatch vào root AppState.
+
+3️⃣ DeviceContext
+window.innerWidth/innerHeight → useState(deviceInfo)
+window.addEventListener('resize') → cập nhật deviceInfo
+useMemo → { width, height, isMobile, isTablet, isDesktop } → cung cấp cho AppProvider
+AppContext nhận deviceInfo → dispatch(DEVICE/SET_INFO).
+
+4️⃣ SettingsContext
+Load từ localStorage → useState(theme, locale)
+useEffect → save lại localStorage khi thay đổi
+useEffect → cập nhật data-theme trên <html>
+useMemo → { theme, locale, setTheme, setLanguage, toggleTheme } → cung cấp cho AppProvider
+AppContext nhận theme, locale → dispatch(SETTINGS/INIT).
+
+5️⃣ UIContext
+useReducer(uiReducer, initialUIState)
+state.toast → AppContext useEffect → toastService.show() → dispatch(UI/CLEAR_TOAST)
+state.loading, state.sidebarOpen, state.modal → cung cấp trực tiếp cho AppProvider
+Luồng toast: UIContext → AppContext → toastService
+
+6️⃣ DataContext
+useAuth().user thay đổi → useEffect → loadData()
+loadData() → dataService.fetchAll() → dispatch(DATA/SET_ALL)
+updateData(key, value) → dispatch(DATA/UPDATE) → dataService.save()
+resetData() → dispatch(DATA/RESET) → dataService.clear()
+Toast gọi trực tiếp toastService.show/info/error
+AppContext có thể đồng bộ data nếu muốn, nhưng toast vẫn gọi trực tiếp.
+
+7️⃣ DataSyncContext / APIContext / AuthContext / CacheContext / StorageContext
+Các module này cung cấp state + methods riêng.
+
+Nếu module cần update AppState chung → dispatch vào AppContext.
+
+Các side-effect (API call, cache, storage) → toast có thể gọi trực tiếp nhưng cần cẩn thận tránh show toast trùng lặp.
+
+8️⃣ Toast Handling tổng thể
+[UIContext toast] → AppContext useEffect → toastService.show → UI/CLEAR_TOAST
+[Network online/offline] → trực tiếp toastService.show
+[DataContext/Service] → trực tiếp toastService.show
+✅ Lưu ý: toast chỉ show một lần, AppContext listener đảm bảo toast từ UIContext không bị spam.
+⚠️ Các module khác show toast trực tiếp → nếu cùng lúc show nhiều toast → có thể loạn xì ngầu.
+
+9️⃣ AppProvider Tree
+<AppContext.Provider>
+  <ToastProvider>
+    <SettingsProvider>
+      <NetworkProvider>
+        <DeviceProvider>
+          <UIProvider>
+            <CacheProvider>
+              <StorageProvider>
+                <APIProvider>
+                  <AuthProvider>
+                    <DataProvider>
+                      <DataSyncProvider>
+                        {children}
+                      </DataSyncProvider>
+                    </DataProvider>
+                  </AuthProvider>
+                </APIProvider>
+              </StorageProvider>
+            </CacheProvider>
+          </UIProvider>
+        </DeviceProvider>
+      </NetworkProvider>
+    </SettingsProvider>
+  </ToastProvider>
+</AppContext.Provider>
+Tree này đảm bảo dependency: Settings → Network → Device → UI → Cache → Storage → API → Auth → Data → DataSync.
+
+AppState đồng bộ dữ liệu từ các module quan trọng: network, device, settings, ui.toast.
+

@@ -1,0 +1,36 @@
+🔵 Thứ tự tối ưu Context (chuẩn runtime):
+1. NetworkContext
+→ context chạy đầu tiên, ảnh hưởng DataSync + API + Auth
+
+2. DeviceContext
+→ nhẹ, ít phụ thuộc
+
+3. SettingsContext
+→ theme + language, liên quan đến UI
+
+4. UIContext
+→ tiêu chuẩn để test re-render (UICluster → rất nhạy)
+
+5. DataContext
+→ chứa data load ban đầu
+
+6. DataSyncContext
+→ phụ thuộc Network + Data
+
+7. APIContext
+→ phụ thuộc Network + token
+
+8. AuthContext
+→ phụ thuộc APIContext + Storage
+
+9. CacheContext
+→ phụ Data + API nhưng độc lập
+
+10. StorageContext
+→ tác động Settings, Auth, Data, Cache
+
+11. NotificationContext
+→ cuối cùng, ít phụ thuộc
+
+12. AppContext (core)
+→ tối ưu lại value + reducer ở cuối (nếu cần)

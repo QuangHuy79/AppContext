@@ -1,0 +1,75 @@
+                   ┌──────────────────────────┐
+                   │        AppRuntime        │
+                   │ (Gom tất cả Providers)  │
+                   └────────────┬────────────┘
+                                │
+        ┌───────────────┬───────┼───────────────┬─────────────┐
+        │               │       │               │             │
+┌───────▼───────┐ ┌─────▼─────┐│ ┌─────────────▼───────┐ ┌───▼─────┐
+│ NetworkContext │ │ DeviceCtx ││ │ SettingsContext     │ │ UIContext│
+└───────────────┘ └───────────┘│ └────────────────────┘ └─────────┘
+                                │
+        ┌───────────────┬───────┼───────────────┬─────────────┐
+        │               │       │               │             │
+┌───────▼───────┐ ┌─────▼─────┐│ ┌─────────────▼───────┐ ┌───▼─────┐
+│ CacheContext  │ │ StorageCtx││ │ NotificationContext │ │ DataCtx │
+└───────────────┘ └───────────┘│ └────────────────────┘ └─────────┘
+                                │
+        ┌───────────────┬───────┼───────────────┐
+        │               │       │               │
+┌───────▼───────┐ ┌─────▼─────┐┌───────────────▼───────┐
+│ DataSyncCtx   │ │ AuthCtx    ││ APIContext             │
+└───────────────┘ └───────────┘└───────────────────────┘
+
+Flow chi tiết
+AppRuntime:
+
+Gom tất cả provider lại (Network → API)
+
+Quản lý render & context hierarchy
+
+Memoization & lazy load các module nặng
+
+11 Module chính:
+
+NetworkContext → theo dõi online/offline
+
+DeviceContext → thông tin thiết bị, responsive
+
+SettingsContext → theme, language
+
+UIContext → UI state, modal, toast
+
+CacheContext → dữ liệu tạm, tối ưu performance
+
+StorageContext → localStorage/sessionStorage, persist state
+
+NotificationContext → push / in-app notifications
+
+DataContext → quản lý data, CRUD
+
+DataSyncContext → sync với API, offline queue
+
+AuthContext → token, login/logout flow
+
+APIContext → giao tiếp backend, mock API
+
+Service & Hook liên quan:
+
+toastService → UI notifications
+
+dataService → fetch data / cache
+
+storageService → read/write storage
+
+tokenService → auth token management
+
+useApp() → hook wrapper tiện dụng
+
+Testing:
+
+Integration test toàn bộ module
+
+Cross-check state & context flow
+
+Stress test AppRuntime

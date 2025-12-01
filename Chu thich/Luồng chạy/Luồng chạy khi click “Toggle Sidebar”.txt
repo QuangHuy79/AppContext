@@ -1,0 +1,40 @@
+          [DevPanel.jsx]
+                │
+   (User clicks "Toggle Sidebar" button)
+                │
+                ▼
+     dispatch({ type: "UI/TOGGLE_SIDEBAR" })
+                │
+                ▼
+        [AppContext.jsx]
+  useReducer(appReducer, initialState)
+                │
+        ┌───────┴────────┐
+        │                │
+        ▼                ▼
+  dispatch()       state (before)
+        │
+        ▼
+     [appReducer.js]
+ ┌────────────────────────────┐
+ │ case "UI/TOGGLE_SIDEBAR": │
+ │   return {                │
+ │     ...state,             │
+ │     ui: {                 │
+ │       ...state.ui,        │
+ │       sidebarOpen: !state.ui.sidebarOpen │
+ │     }                     │
+ │   }                       │
+ └────────────────────────────┘
+        │
+        ▼
+       New state
+        │
+        ▼
+ React Context re-renders → 
+ All components using `useApp()` get updated
+        │
+        ▼
+ [DevPanel.jsx] re-renders
+    -> state.ui.sidebarOpen changed
+    -> UI shows "Yes" / "No" updated

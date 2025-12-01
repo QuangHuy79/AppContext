@@ -1,0 +1,104 @@
+🧠 Thiết kế logic cho bước 16 – StatePersistenceContext
+🎯 Mục tiêu tổng thể
+Giữ cho toàn bộ AppState (hoặc các phần quan trọng) tồn tại giữa các lần reload của ứng dụng — nghĩa là:
+
+Khi người dùng refresh hoặc đóng/mở lại tab, toàn bộ state được khôi phục.
+
+Không gây loop render, không lưu những phần state tạm (như loading, error).
+
+Dễ mở rộng cho giai đoạn “AppRuntime v1” ở bước 18.
+
+🏗️ 1. Phạm vi lưu trữ
+Ta không cần lưu mọi thứ trong AppState, chỉ những phần "bền vững" (persistent).
+Đề xuất lưu:
+
+Context	Key lưu trong localStorage	Mục đích
+SettingsContext	"settings"	Theme, language, UI preference
+AuthContext	"auth"	Token, user info (trừ password)
+CacheContext	"cache"	Dữ liệu cache tạm, nếu nhẹ
+DataSyncContext	"dataSync"	(optional) thông tin đồng bộ
+🔸 Không lưu NetworkContext, DeviceContext, UIContext vì chúng là “runtime only”.
+
+🔄 2. Luồng đồng bộ
+[AppProvider Mount] 
+     ↓
+StatePersistenceContext → đọc localStorage → hydrate AppState
+     ↓
+Khi AppState thay đổi (debounced 500ms):
+     ↓
+StatePersistenceContext → ghi lại vào localStorage
+Khi app khởi động → gọi loadPersistedState()
+
+Khi state thay đổi → gọi saveAppState()
+
+Có thể dùng debounce (500ms) để giảm tần suất ghi localStorage.
+
+⚙️ 3. API nội bộ của context
+StatePersistenceContext sẽ cung cấp:
+
+{
+  persistedKeys,           // Danh sách key được quản lý
+  loadPersistedState,      // Hàm đọc localStorage
+  saveAppState,            // Hàm lưu AppState hiện tại
+  clearPersistedState,     // Xóa toàn bộ localStorage (hoặc theo key)
+}
+⚡ Những hàm này có thể gọi từ toastService hoặc UIContext (vd: khi nhấn “Xóa Cache”).
+
+🧩 4. Cách hook vào AppProvider
+Ta bọc AppProvider cuối cùng bằng StatePersistenceProvider, ví dụ:
+
+<StatePersistenceProvider>
+  <AppProvider>
+    <App />
+  </AppProvider>
+</StatePersistenceProvider>
+Hoặc nếu AppProvider là context chính thì ta chèn StatePersistenceContext bên trong AppProvider, vì nó cần quyền truy cập appState:
+
+<AppProvider>
+  <StatePersistenceProvider>
+    <App />
+  </StatePersistenceProvider>
+</AppProvider>
+Cách này dễ quản lý hơn vì có thể truy cập trực tiếp appState để lưu.
+
+🧠 5. Cơ chế hoạt động chi tiết
+(a) Khi khởi động ứng dụng:
+
+StatePersistenceProvider mount.
+
+Gọi loadPersistedState().
+
+Trả về object chứa các giá trị được lưu ({ settings, auth, cache }).
+
+Dispatch vào reducer toàn cục (appReducer) để hydrate state ban đầu.
+
+(b) Khi appState thay đổi:
+
+Sử dụng useEffect trong StatePersistenceProvider.
+
+Mỗi khi appState thay đổi (và có key trong persistedKeys) → serialize và lưu vào localStorage.
+
+Có debounce để tránh ghi liên tục.
+
+(c) Khi cần xóa cache:
+
+Gọi clearPersistedState() → removeItem() các key được chỉ định → toast.info("Cache cleared").
+
+💡 6. Về serialization & an toàn dữ liệu
+Dùng JSON.stringify() và JSON.parse() khi đọc/ghi.
+
+Thêm try/catch để tránh lỗi nếu localStorage bị khóa/quá đầy.
+
+Có thể versioning key để tránh lỗi schema khi nâng cấp app:
+
+localStorage.setItem("app_v1_auth", JSON.stringify(data))
+🧪 7. Test coverage trong src/test/StatePersistence.test.jsx
+Các test chính:
+
+Lưu state → reload → khôi phục đúng giá trị.
+
+Xóa cache → localStorage rỗng.
+
+Không gây loop khi hydrate.
+
+Ghi localStorage debounce (timeout test).

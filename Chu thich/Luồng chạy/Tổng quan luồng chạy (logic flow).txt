@@ -1,0 +1,284 @@
+🧭 Tổng quan luồng chạy (logic flow)
+Chúng ta chia luồng ra 4 tầng:
+
+Component UI → Hook domain → Context → Reducer → Context State → UI update
+
+Hoặc minh họa ngắn gọn như sau:
+
+User click / event
+     ↓
+Component gọi hàm trong custom hook (VD: useUI)
+     ↓
+Hook xử lý logic / side effect nhẹ / dispatch action
+     ↓
+AppContext (Provider) nhận action qua useReducer
+     ↓
+appReducer cập nhật state (immutable)
+     ↓
+Provider → Context value thay đổi → Re-render các component dùng useApp/useUI
+     ↓
+UI component đọc state mới → render lại (ví dụ toast hiển thị)
+🔍 Mổ chi tiết từng tầng
+1️⃣ UI Component (View Layer)
+Ví dụ: SidebarToggleButton.jsx, ToastContainer.jsx, LoginForm.jsx.
+
+Vai trò: chỉ gọi API public của hook (useUI, useAuth, …).
+
+Không trực tiếp dispatch, mà giao cho hook domain xử lý.
+
+Mục tiêu: UI càng “ngây thơ” càng tốt, không chứa business logic.
+
+// SidebarToggleButton.jsx
+import { useUI } from "../hooks/useUI";
+
+export default function SidebarToggleButton() {
+  const { toggleSidebar } = useUI();
+  return <button onClick={toggleSidebar}>Toggle Sidebar</button>;
+}
+2️⃣ Hook domain (Logic Layer)
+Ví dụ: useUI, useAuth, useTheme...
+
+Là bộ điều phối logic nghiệp vụ (business logic orchestrator).
+
+Dùng useApp() nội bộ để lấy state & dispatch.
+
+Có thể chứa side effects (localStorage, analytics, delay...).
+
+Giúp tách biệt reducer (pure) khỏi effect (impure).
+
+// useUI.js
+import { useApp } from "./useApp";
+
+export function useUI() {
+  const { state, dispatch } = useApp();
+
+  const toggleSidebar = () => dispatch({ type: "UI/TOGGLE_SIDEBAR" });
+
+  const showToast = (message, type = "info") => {
+    dispatch({ type: "UI/SHOW_TOAST", payload: { message, type } });
+    setTimeout(() => dispatch({ type: "UI/CLEAR_TOAST" }), 2500);
+  };
+
+  return {
+    sidebarOpen: state.ui.sidebarOpen,
+    toast: state.ui.toast,
+    toggleSidebar,
+    showToast,
+  };
+}
+👉 Hook này giúp UI layer không phải biết reducer action nào đang dùng, chỉ gọi showToast() là xong.
+
+3️⃣ AppContext (State Container Layer)
+File: AppContext.jsx
+
+Cung cấp state và dispatch cho toàn app.
+
+Được tạo bởi useReducer(appReducer, initialAppState).
+
+Không chứa logic domain, chỉ quản lý vòng đời global.
+
+Khi dispatch(action), nó chuyển action đó tới appReducer.
+
+const [state, dispatch] = useReducer(appReducer, initialAppState);
+4️⃣ Reducer (Pure Update Logic)
+File: appReducer.js
+
+Là nơi duy nhất thay đổi state.
+
+Pure function (không side-effect).
+
+Nhận vào state + action, trả ra state mới.
+
+case "UI/TOGGLE_SIDEBAR":
+  return {
+    ...state,
+    ui: { ...state.ui, sidebarOpen: !state.ui.sidebarOpen },
+  };
+5️⃣ Context State (Data Source)
+Khi reducer return state mới, React sẽ:
+
+Ghi nhận state thay đổi → Context Provider sinh ra value mới { state, dispatch }.
+
+Tất cả component đang useApp() hoặc useUI() sẽ re-render.
+
+Mỗi component re-render chỉ khi hook nó dùng có giá trị thay đổi (nhờ React’s dependency rules hoặc memoization).
+
+6️⃣ UI Update
+Các component dùng state mới render lại.
+
+Ví dụ: ToastContainer thấy state.ui.toast != null → render toast.
+
+Khi timeout chạy dispatch({ type: "UI/CLEAR_TOAST" }), toast biến mất.
+
+⚙️ Ví dụ dòng chạy thực tế
+Giả sử user click “Toggle Sidebar”:
+
+SidebarButton (UI)
+  ↓ calls
+useUI.toggleSidebar()
+  ↓ calls
+dispatch({ type: "UI/TOGGLE_SIDEBAR" })
+  ↓ handled by
+appReducer → updates state.ui.sidebarOpen
+  ↓
+React re-renders Provider → re-renders components using useApp/useUI
+  ↓
+Sidebar component sees sidebarOpen = true → open animation
+Còn nếu bạn bấm “Show Toast”:
+
+Button → useUI.showToast("Saved!")
+  ↓
+dispatch(UI/SHOW_TOAST)
+  ↓
+Reducer sets state.ui.toast = { message: "Saved!" }
+  ↓
+ToastContainer renders toast
+  ↓
+setTimeout dispatch(UI/CLEAR_TOAST)
+  ↓
+Reducer sets toast = null → ToastContainer hides
+🎯 Tổng kết vai trò
+Tầng	Vai trò chính	Chứa logic
+UI Component	View, event trigger	❌ Không
+Custom Hook (useUI, useAuth)	Xử lý logic nghiệp vụ, side effect	✅ Có
+AppContext	Quản lý vòng đời global state	⚙️ Kết nối
+Reducer	Xử lý cập nhật state thuần	✅ Pure
+State (Context value)	Dữ liệu cập nhật → render lại UI	✅ Reactive
+
+
+
+
+✅ Luồng chạy chuẩn của toàn bộ AppContext Modules (Task 10)
+Dựa trên cấu trúc project bạn gửi, luồng chạy THẬT sẽ như sau:
+
+🔵 1. App khởi động → AppRuntime.jsx
+Tạo RuntimeBoundary
+
+Load AppContext và toàn bộ Providers theo thứ tự bạn đã cấu hình
+→ Đây là entry point thật của ứng dụng.
+
+Luồng chạy:
+AppRuntime.jsx → <AppProvider>
+
+🔵 2. AppProvider bên trong AppContext.jsx
+AppProvider sẽ wrap tất cả module theo đúng thứ tự bạn đã build.
+
+Luồng chạy:
+
+<AppContextProvider>
+   <StatePersistenceProvider>
+     <NetworkProvider>
+       <DeviceProvider>
+         <SettingsProvider>
+           <UIProvider>
+             <NotificationProvider>
+               <StorageProvider>
+                 <CacheProvider>
+                   <DataProvider>
+                     <DataSyncProvider>
+                       <APIProvider>
+                         <AuthProvider>
+                           {children}
+→ Đây là “đường ống” chính của toàn bộ 12 context.
+
+🔵 3. Các module tự kích hoạt useEffect lần đầu
+Khi app load:
+
+(1) NetworkContext
+Lắng nghe online/offline
+
+dispatch UI/SHOW_TOAST nếu mất mạng
+
+(2) DeviceContext
+Lấy kích thước màn hình
+
+Lắng nghe resize, orientationchange
+
+(3) SettingsContext
+Đọc theme/language từ localStorage
+
+(4) UIContext
+Chuẩn bị toast queue
+
+(5) NotificationContext
+Ready API cho notification
+
+(6) StorageContext
+Cung cấp storage.get / set / remove / clear
+
+(7) CacheContext
+Tạo cache object dùng chung
+
+(8) DataContext
+loadData() lần đầu (nếu có auto load)
+
+fetchAll trong dataService được kích hoạt
+
+(9) DataSyncContext
+Theo dõi network
+
+Trigger sync nếu offline → online
+
+(10) APIContext
+Chuẩn bị fetch wrapper
+
+gắn api.get / api.post vào context
+
+(11) AuthContext
+Restore session từ tokenService
+
+Nếu có token → gọi API fake /me
+
+dispatch UI/SHOW_TOAST "session restored"
+
+🔵 4. Hooks chạy tiếp theo
+Khi màn hình sử dụng dữ liệu:
+
+useDevice() đọc DeviceContext
+
+useNetwork() đọc NetworkContext
+
+useUI() đọc UIContext
+
+useAPI() đọc APIContext
+
+useAuth() đọc AuthContext
+
+useData() đọc DataContext
+
+useDataSync() đọc DataSyncContext
+
+useStorage() đọc StorageContext
+
+→ Hooks không tự chạy, chỉ khởi động khi component gọi chúng.
+
+🔵 5. Khi user Login
+AuthContext login:
+
+gọi api.get("/posts")
+
+đợi 600ms
+
+tokenService.setTokens
+
+setUser(fakeUser)
+
+dispatch toast “Đăng nhập thành công”
+
+🔵 6. Khi user Logout
+xóa token
+
+setUser(null)
+
+dispatch toast “Đăng xuất”
+
+🔵 7. Khi user reload trang
+StatePersistenceContext khôi phục appState
+
+tokenService đọc token
+
+AuthContext restoreSession()
+
+DataContext có thể reload data nếu bạn bật autoLoad
+
+UIContext reset toast queue

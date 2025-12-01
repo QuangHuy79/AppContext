@@ -1,0 +1,39 @@
+🧩 Bước 17 – Integration Tests
+Mục tiêu:
+Kiểm tra xem các context chính (DataSyncContext, APIContext, AuthContext, StatePersistenceContext) phối hợp trơn tru khi app chạy thực tế.
+
+⚙️ Luồng test chính
+Render toàn bộ AppProvider (đang gom tất cả context).
+
+Login giả lập qua AuthContext → token được lưu.
+
+APIContext thực hiện fetch mock data (qua json-server hoặc dataService).
+
+DataSyncContext sync dữ liệu lên/down từ “server” (mock).
+
+StatePersistenceContext lưu toàn bộ AppState → reload → khôi phục.
+
+Kiểm tra console log + toast thông báo để xác minh flow hoạt động.
+
+📁 Cấu trúc test
+src/
+ └─ test/
+     └─ integration/
+         ├─ IntegrationTest.jsx      // file chính
+         ├─ mockServer.js            // (nếu cần json-server giả)
+         └─ helpers/
+              └─ mockData.js
+🧠 Ý tưởng thực thi
+Mình tạo IntegrationTest.jsx dùng AppProvider + UI test component.
+
+Bên trong có các nút:
+
+Login Test (gọi AuthContext.login)
+
+Fetch Data (APIContext.fetchData)
+
+Sync Data (DataSyncContext.syncNow)
+
+Restore AppState (StatePersistenceContext load lại sau reload)
+
+Mỗi action log ra console + gọi toast để dễ debug trực quan.

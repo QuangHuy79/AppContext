@@ -1,0 +1,26 @@
+🎯 Mục tiêu bước 3 – SettingsContext
+Chức năng:
+Quản lý các thiết lập người dùng (user preferences) như:
+
+theme (light/dark/system),
+
+language (en/vi/…),
+
+các tùy chỉnh app (VD: currency, timezone… nếu cần).
+
+SettingsContext sẽ lưu vào localStorage để giữ lại khi người dùng reload.
+
+🧩 Nhiệm vụ chính
+Tạo SettingsContext dùng createContext.
+
+Cho phép:
+
+Đọc theme hiện tại.
+
+Đổi theme (và lưu lại localStorage).
+
+Đọc & đổi ngôn ngữ.
+
+Dùng useEffect để khởi tạo dữ liệu từ localStorage.
+
+Tạo hook useSettings() để truy cập nhanh.

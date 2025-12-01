@@ -1,0 +1,35 @@
+🚀 Bước 9 – DataSyncContext
+🎯 Mục tiêu:
+Tạo DataSyncContext để:
+
+Quản lý trạng thái đồng bộ dữ liệu giữa local và server.
+
+Theo dõi progress, error, lastSyncTime, v.v.
+
+Cho phép các module khác (như DataContext hoặc AuthContext) kích hoạt sync toàn cục.
+
+Hiển thị toast khi sync thành công/thất bại thông qua AppContext.
+
+🧩 Tóm tắt chức năng chính
+syncData(): Hàm chính để chạy quá trình đồng bộ (giả lập delay).
+
+lastSyncTime: Thời gian đồng bộ cuối cùng.
+
+isSyncing: Trạng thái đang đồng bộ.
+
+error: Thông tin lỗi (nếu có).
+
+Gửi toast:
+
+✅ Thành công → “Đồng bộ thành công”.
+
+❌ Thất bại → “Đồng bộ thất bại”.
+
+⚙️ Cấu trúc file
+src/
+ ├─ context/
+ │   └─ DataSyncContext.jsx
+ ├─ hooks/
+ │   └─ useDataSync.js
+ ├─ test/
+ │   └─ TestDataSync.jsx

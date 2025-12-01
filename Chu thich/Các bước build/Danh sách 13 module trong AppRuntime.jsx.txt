@@ -1,0 +1,25 @@
+AppProvider (core)
+
+StatePersistenceProvider
+
+NetworkProvider
+
+DeviceProvider
+
+SettingsProvider
+
+UIProvider
+
+CacheProvider
+
+StorageProvider
+
+NotificationProvider
+
+DataProvider
+
+DataSyncProvider
+
+AuthProvider
+
+APIProvider

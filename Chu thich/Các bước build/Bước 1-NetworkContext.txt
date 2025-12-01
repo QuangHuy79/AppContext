@@ -1,0 +1,11 @@
+🎯 Mục tiêu bước 1 – NetworkContext
+Chức năng:
+Quản lý trạng thái mạng (online/offline) toàn cục, để app có thể biết khi người dùng mất kết nối hoặc khôi phục mạng.
+
+Yêu cầu:
+
+Theo dõi sự kiện online / offline của trình duyệt.
+
+Cung cấp isOnline qua context để component khác sử dụng.
+
+Cho phép dùng hook useNetwork() để truy cập dễ dàng.

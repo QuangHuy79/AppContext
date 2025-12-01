@@ -1,0 +1,124 @@
+🧩 Bước 8 – AuthContext
+🎯 Mục đích tổng thể
+AuthContext chịu trách nhiệm quản lý toàn bộ trạng thái xác thực (authentication state) của ứng dụng, bao gồm:
+
+Lưu trữ và kiểm soát user, token, và trạng thái đăng nhập.
+
+Cung cấp API login/logout cho toàn app.
+
+Tự động phục hồi phiên (restore session) khi app khởi động.
+
+Đồng bộ trạng thái auth lên global AppContext nếu cần (ví dụ: hiển thị toast khi login thành công, hoặc logout toàn app).
+
+Tóm gọn:
+
+AuthContext chính là “bộ não” kiểm soát ai đang đăng nhập, dưới danh tính nào, và token đang hợp lệ hay không.
+
+⚙️ Chức năng chính của AuthContext
+Chức năng	Mô tả
+1. login(credentials)	Gửi yêu cầu xác thực (qua authService), nếu thành công thì lưu token + user vào context và localStorage.
+2. logout()	Xóa token và user, reset state, có thể hiển thị toast “Đã đăng xuất”.
+3. restoreSession()	Khi ứng dụng load lại, tự động lấy token và user từ localStorage để khôi phục session.
+4. isAuthenticated	Biến boolean giúp các component kiểm tra nhanh trạng thái login.
+5. loading/error	Cho phép hiển thị spinner hoặc báo lỗi khi đăng nhập.
+🧠 Lý do cần AuthContext riêng
+Hiện tại, hệ thống AppContext của bạn đã có:
+
+NetworkContext → quản lý mạng
+
+DeviceContext → thông tin thiết bị
+
+SettingsContext → theme + locale
+
+UIContext → giao diện (toast, modal, v.v.)
+
+DataContext → dữ liệu nội bộ
+
+👉 Nhưng chưa có module nào chịu trách nhiệm quản lý user & quyền truy cập.
+
+AuthContext lấp chỗ trống này, giúp:
+
+Toàn bộ app biết rõ “ai đang dùng app”.
+
+Các module khác (như DataContext hoặc UIContext) có thể phản ứng theo auth state (ví dụ: clear data khi logout).
+
+Dễ dàng mở rộng thêm logic phân quyền (role-based access control).
+
+🔄 Cách AuthContext hòa vào hệ thống hiện tại
+Dùng dispatch từ AppContext để đồng bộ các action global (nếu bạn muốn hiển thị toast hoặc trigger data reload sau login).
+
+Được bọc trong AppProvider cùng DataProvider, nhờ đó toàn bộ app có thể gọi useAuth() để truy cập nhanh user, login, logout, v.v.
+
+💡 Tóm tắt ngắn gọn
+Mục tiêu	Kết quả mong muốn
+Quản lý trạng thái xác thực người dùng	✅ Có AuthContext với user, token, isAuthenticated
+Cung cấp API login/logout	✅ Có hook useAuth() tiện dụng
+Giữ token bền vững qua refresh	✅ Lưu & restore từ localStorage
+Tích hợp nhẹ nhàng vào AppProvider	✅ Bao quanh DataProvider hoặc song song
+Chuẩn bị nền cho các bước sau (VD: PermissionsContext hoặc ProfileContext)	🚀 Có thể mở rộng dễ dàng
+
+🧭 Luồng hoạt động AuthContext
+        ┌───────────────────────┐
+        │      App khởi chạy    │
+        └──────────┬────────────┘
+                   │
+                   ▼
+      ┌─────────────────────────────┐
+      │ AuthProvider khởi tạo       │
+      │ → gọi restoreSession()      │
+      └──────────┬──────────────────┘
+                 │
+                 ▼
+      ┌─────────────────────────────┐
+      │ Lấy token + user từ         │
+      │ localStorage (nếu có)       │
+      └──────────┬──────────────────┘
+                 │
+                 │ Có token?           
+                 │
+     ┌───────────┴────────────┐
+     │                        │
+     ▼                        ▼
+┌──────────────┐       ┌────────────────┐
+│ isAuthenticated=true │  isAuthenticated=false │
+│ user restored         │  user=null, token=null│
+└──────────────┘       └────────────────┘
+        │
+        ▼
+┌───────────────────────────────┐
+│ AppProvider nhận state auth   │
+│ Các component có thể gọi useAuth() │
+└───────────────────────────────┘
+
+⚙️ Khi người dùng login
+User → gọi login(credentials)
+          │
+          ▼
+  authService.login()  ⟶ (fake API / real API)
+          │
+          ▼
+  Nhận user + token
+          │
+          ▼
+  Lưu vào localStorage
+          │
+          ▼
+  Cập nhật AuthContext state
+          │
+          ▼
+  dispatch("AUTH/LOGIN_SUCCESS")
+          │
+          ▼
+  ToastService hiển thị “Đăng nhập thành công”
+
+🚪 Khi người dùng logout
+User → gọi logout()
+          │
+          ▼
+  Xóa user + token khỏi state
+  Xóa token khỏi localStorage
+  dispatch("AUTH/LOGOUT")
+          │
+          ▼
+  ToastService hiển thị “Đã đăng xuất”
+  DataContext có thể reset dữ liệu nếu cần

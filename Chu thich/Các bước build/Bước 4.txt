@@ -1,0 +1,42 @@
+🎯 Mục tiêu Bước 4 – AuthContext
+🧩 Chức năng chính
+Quản lý toàn bộ trạng thái xác thực người dùng (authentication state) ở cấp ứng dụng:
+
+Lưu thông tin người dùng (user) và token (accessToken hoặc refreshToken).
+
+Cho phép đăng nhập / đăng xuất / tự động khôi phục phiên.
+
+Cung cấp hook useAuth() để truy cập dễ dàng.
+
+Đồng bộ dữ liệu vào localStorage để giữ session sau khi reload.
+
+⚙️ Chi tiết kỹ thuật
+1. State của AuthContext
+{
+  user: null,          // thông tin user hiện tại
+  token: null,         // token JWT hoặc tương tự
+  loading: false,      // trạng thái đang đăng nhập
+  isAuthenticated: false
+}
+2. Các hàm hành động chính
+Hàm	Mục đích
+login(credentials)	Gửi request login qua apiService, lưu token + user vào state & localStorage.
+logout()	Xóa token + user khỏi state & localStorage.
+restoreSession()	Khi load app, tự động đọc token & user từ localStorage.
+updateUser(data)	Cho phép cập nhật thông tin user mà không cần đăng nhập lại.
+3. Tích hợp dịch vụ
+Dùng apiService để gọi API đăng nhập.
+
+Dùng storageService để đọc/ghi token & user.
+
+4. Hook useAuth()
+Cung cấp:
+
+const { user, token, isAuthenticated, login, logout, updateUser } = useAuth();
+5. File cần có
+src/
+├── context/
+│   ├── modules/
+│   │   └── AuthContext.jsx
+├── hooks/
+│   └── useAuth.js

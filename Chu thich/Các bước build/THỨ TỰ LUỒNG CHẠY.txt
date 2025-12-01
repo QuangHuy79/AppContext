@@ -1,0 +1,59 @@
+✅ THỨ TỰ LUỒNG CHẠY CHÍNH XÁC (FINAL ORDER)
+
+1 → 11 = chạy từ ngoài vào trong
+
+1. NetworkContext
+
+→ Xác định online/offline trước để các module khác biết môi trường.
+
+2. DeviceContext
+
+→ Xác định thiết bị, kích thước màn hình — UI và logic phụ thuộc vào đây.
+
+3. SettingsContext
+
+→ Load theme, ngôn ngữ, giao diện người dùng.
+
+4. UIContext
+
+→ Quản lý UI state (sidebar, modal, loading…) — phụ thuộc Settings & Device.
+
+5. CacheContext
+
+→ Chuẩn bị bộ nhớ cache để DataContext sử dụng.
+
+6. StorageContext (StatePersistence)
+
+→ Khôi phục state app từ localStorage + sessionStorage.
+
+7. NotificationContext
+
+→ Chuẩn hóa hệ thống event/ngòi nổ thông báo.
+
+8. DataContext
+
+→ Load dữ liệu chính, cần Cache + Network.
+
+9. DataSyncContext
+
+→ Đồng bộ dữ liệu 2 chiều (client ↔ server), dựa vào Data + Network.
+
+10. APIContext
+
+→ Tạo HTTP client + inject token + xử lý lỗi.
+
+11. AuthContext
+
+→ Xử lý login/logout/refreshToken, phụ thuộc APIContext + Storage.
+
+🎯 Giải thích nhanh dependencies
+Module	Phụ thuộc vào	Lý do
+Device	–	chạy sớm để UI biết layout
+Settings	–	load theme/language
+UI	Settings + Device	cập nhật style theo config
+Cache	–	để DataContext dùng cache
+Storage	–	khôi phục state khi start
+Data	Cache + Network	nếu offline thì lấy cache
+DataSync	Data + Network	sync background
+API	–	cung cấp HTTP client
+Auth	API + Storage	refresh token & giữ session

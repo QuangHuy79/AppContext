@@ -1,0 +1,10 @@
+🎯 Mục tiêu bước 15 – CacheContext
+Tạo context để:
+
+Lưu và quản lý dữ liệu cache theo key.
+
+Cho phép APIContext hoặc các module khác đọc cache trước khi fetch.
+
+Tự động hết hạn cache (TTL – time-to-live).
+
+Hỗ trợ thủ công: setCache, getCache, clearCache.

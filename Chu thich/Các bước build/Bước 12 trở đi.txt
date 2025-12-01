@@ -1,0 +1,89 @@
+🚀 AppContext Project — Phase 2 (bước 12+)
+Mục tiêu: kết nối dữ liệu thật (hoặc mock), đồng bộ trạng thái toàn hệ thống mà không phá vỡ cấu trúc context hiện tại.
+
+🧩 Bước 12 – DataSyncContext
+Mục đích: Quản lý luồng đồng bộ dữ liệu giữa client và server/mock API.
+
+Trách nhiệm chính:
+
+Theo dõi danh sách các mô-đun có dữ liệu cần sync (Settings, Auth, Notification, v.v.).
+
+Cung cấp hàm syncNow() hoặc autoSync(interval) để đồng bộ định kỳ.
+
+Emit toast hoặc log khi sync thành công/thất bại.
+
+Dữ liệu mẫu: lấy từ dataService hoặc json-server.
+
+🌐 Bước 13 – APIContext
+Mục đích: Quản lý toàn bộ giao tiếp với API (mock hoặc thật).
+
+Trách nhiệm chính:
+
+Tạo apiService có baseURL, token, error handling.
+
+Context giữ apiStatus, retry, queueRequest.
+
+Hỗ trợ mock qua json-server (cấu hình baseURL = http://localhost:3000).
+
+Gợi ý:
+
+const APIContext = createContext({ fetchData, postData, putData, deleteData });
+🔐 Bước 14 – AuthRefactor (nâng cấp AuthContext)
+Mục đích: Liên kết AuthContext với APIContext.
+
+Trách nhiệm chính:
+
+Đăng nhập / đăng xuất qua mock API (/users endpoint).
+
+Lưu token vào localStorage.
+
+Bắt lỗi 401 toàn cục.
+
+📦 Bước 15 – CacheContext
+Mục đích: Tối ưu hiệu năng khi load lại dữ liệu.
+
+Trách nhiệm chính:
+
+Lưu cache theo key (sessionStorage hoặc IndexedDB).
+
+Cho phép clearCache(), getCache(key), setCache(key, value).
+
+🧠 Bước 16 – StatePersistence
+Mục đích: Giữ lại toàn bộ AppState khi reload trang.
+
+Trách nhiệm chính:
+
+Serialize app state vào localStorage (trừ dữ liệu tạm).
+
+Hỗ trợ khôi phục sau reload hoặc crash.
+
+🧰 Bước 17 – Test & Integration
+Mục đích: Kiểm tra toàn bộ context sau khi có dữ liệu thật/mock.
+
+Trách nhiệm chính:
+
+Tạo src/test/integration để test Mock API + DataSync.
+
+Viết test flow: login → fetch data → sync → offline → restore.
+
+🚀 Bước 18 – Final Optimization
+Mục đích: Gom các context thành hệ thống AppRuntime v1.
+
+Trách nhiệm chính:
+
+Giảm re-render.
+
+Code split theo feature.
+
+Viết README chuẩn cho AppContext Framework.
+
+📘 Tóm lại:
+
+Bước	Module	Mục tiêu
+12	DataSyncContext	Quản lý đồng bộ dữ liệu
+13	APIContext	Giao tiếp API / mock
+14	AuthRefactor	Liên kết Auth với API
+15	CacheContext	Tối ưu lưu trữ tạm
+16	StatePersistence	Lưu AppState toàn cục
+17	Integration Tests	Test toàn hệ thống
+18	Optimization	Hoàn thiện & xuất bản
