@@ -1,3 +1,4 @@
+// SRC/context/modules/SettingsContext.jsx
 import React, {
   createContext,
   useReducer,

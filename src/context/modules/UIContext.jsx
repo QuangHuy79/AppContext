@@ -40,13 +40,21 @@ const UIContext = createContext(null);
 // ---------------------
 export function UIProvider({ children }) {
   const [state, dispatch] = useReducer(uiReducer, initialUIState);
+  const [logs, setLogs] = React.useState([]);
 
+  // ⭐ log function
+  const log = (message) => {
+    setLogs((prev) => [...prev, message]);
+    console.debug("[UI]", message); // log ra console
+  };
   const value = {
     state,
     dispatch,
     toast: state.toast, // ✅ trực tiếp cung cấp toast
     loading: state.loading, // ✅ trực tiếp cung cấp loading
     sidebarOpen: state.sidebarOpen,
+    log, // ⬅ thêm log function
+    logs, // optional: giữ lại log history
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

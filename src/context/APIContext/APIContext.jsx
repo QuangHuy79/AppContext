@@ -1,112 +1,78 @@
-// import React, { createContext, useContext, useCallback, useState } from "react";
-// import toastService from "../../services/toastService";
-
-// export const APIContext = createContext();
-
-// export const APIProvider = ({ children }) => {
-//   const [loading, setLoading] = useState(false);
-
-//   // 💡 Cấu hình baseURL cố định cho json-server
-//   const BASE_URL = "http://localhost:3001";
-
-//   const request = useCallback(
-//     async (endpoint, options = {}) => {
-//       setLoading(true);
-//       try {
-//         const url = endpoint.startsWith("http")
-//           ? endpoint
-//           : `${BASE_URL}${endpoint}`; // auto nối baseURL nếu endpoint là "/posts"
-
-//         const res = await fetch(url, options);
-//         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-//         const data = await res.json();
-
-//         console.log("[DEBUG][APIContext] ✅ Fetch OK:", url, data);
-//         toastService.show("success", "Fetch thành công", `API: ${endpoint}`);
-
-//         return data;
-//       } catch (error) {
-//         console.error("[DEBUG][APIContext] ❌ Error:", error);
-//         toastService.show("error", error.message, "API Error");
-//         throw error;
-//       } finally {
-//         setLoading(false);
-//       }
-//     },
-//     [BASE_URL]
-//   );
-
-//   const get = useCallback(
-//     (endpoint) => request(endpoint, { method: "GET" }),
-//     [request]
-//   );
-
-//   const post = useCallback(
-//     (endpoint, body) =>
-//       request(endpoint, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(body),
-//       }),
-//     [request]
-//   );
-
-//   return (
-//     // <APIContext.Provider value={{ loading, get, post }}>
-//     <APIContext.Provider
-//       value={{
-//         loading,
-//         get,
-//         post,
-//         api: { get, post }, // ✅ thêm dòng này để tương thích AuthContext
-//       }}
-//     >
-//       {children}
-//     </APIContext.Provider>
-//   );
-// };
-
-// export const useAPI = () => useContext(APIContext);
-
-// =============================
-// APIContext v2 (giữ nguyên comment + thêm các phần tối ưu)
-import React, { createContext, useContext, useCallback, useState } from "react";
+// APIContext.jsx theo C-2
+// src/context/APIContext/APIContext.jsx
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import { tokenService } from "../../services/tokenService";
 import toastService from "../../services/toastService";
 
-// 💡 BASE_URL để ra ngoài component để không tạo lại mỗi lần render
 const BASE_URL = "http://localhost:3001";
 
-export const APIContext = createContext();
+export const APIContext = createContext(null);
 
+/**
+ * Production-ready APIProvider
+ *
+ * - Exposes a stable `api` object (memoized) so consumers won't re-render when internal state changes.
+ * - Requests are cancellable via AbortController.
+ * - Does NOT expose internal loading state as part of context value (prevents wide re-renders).
+ * - Provides helper createAbortController() so callers can cancel long requests.
+ */
 export const APIProvider = ({ children }) => {
-  const [loading, setLoading] = useState(false);
+  // useRef for any internal mutable state (not exposed to context value)
+  const pendingCountRef = useRef(0);
 
-  // -------------------------------------------------------------------
-  // 💡 request(): hàm fetch đa dụng, hỗ trợ GET, POST, PUT, DELETE
-  //    Bản này giữ nguyên comment gốc của bạn và thêm comment mới
-  // -------------------------------------------------------------------
+  // helper: create controller
+  const createAbortController = useCallback(() => new AbortController(), []);
+
+  // core request function (cancellable)
   const request = useCallback(
     async (endpoint, options = {}, showToast = true) => {
-      setLoading(true);
+      // allow caller to pass a signal in options.signal to control cancellation
+      const controller = options.signal ? null : new AbortController();
+      const signal = options.signal ?? controller.signal;
+
+      const url = endpoint.startsWith("http")
+        ? endpoint
+        : `${BASE_URL}${endpoint}`;
+
+      const mergedOptions = {
+        method: options.method ?? "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+        body: options.body,
+        signal,
+      };
+
+      // track pending (internal only)
+      pendingCountRef.current += 1;
 
       try {
-        const url = endpoint.startsWith("http")
-          ? endpoint
-          : `${BASE_URL}${endpoint}`;
-
-        const mergedOptions = {
-          // auto thêm Content-Type nếu chưa có
-          headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {}),
-          },
-          ...options,
-        };
-
         const res = await fetch(url, mergedOptions);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        // ✔️ Safe parse JSON — tránh crash khi API không trả JSON
+        if (!res.ok) {
+          // try to parse error body safely
+          let errBody = null;
+          try {
+            errBody = await res.json();
+          } catch {
+            errBody = null;
+          }
+          const message =
+            (errBody && (errBody.message || JSON.stringify(errBody))) ||
+            `HTTP ${res.status}`;
+          const err = new Error(message);
+          err.status = res.status;
+          throw err;
+        }
+
+        // safe parse JSON
         let data = null;
         try {
           data = await res.json();
@@ -114,121 +80,167 @@ export const APIProvider = ({ children }) => {
           data = null;
         }
 
-        console.log("[DEBUG][APIContext] ✅ Fetch OK:", url, data);
-
         if (showToast) {
           toastService.show("success", "Fetch thành công", `API: ${endpoint}`);
         }
 
         return data;
       } catch (error) {
-        console.error("[DEBUG][APIContext] ❌ Error:", error);
-
-        if (showToast) {
-          toastService.show("error", error.message, "API Error");
+        // abort is not an actual "error" we want to toast always
+        if (error.name === "AbortError") {
+          // suppressed abort
+          // console.debug("[API] request aborted:", endpoint);
+          throw error;
         }
 
+        // logging & toast
+        console.error("[APIContext] Request error:", error);
+        if (showToast) {
+          toastService.show("error", error.message || "API Error", "API Error");
+        }
         throw error;
       } finally {
-        setLoading(false);
+        pendingCountRef.current = Math.max(0, pendingCountRef.current - 1);
       }
     },
-    [] // ⬅️ không để BASE_URL trong dependency nữa
+    []
   );
+  // --------------------------------------------------------
+  // 🔐 C-3: requestWithAuth — auth-aware + refresh + retry
+  // --------------------------------------------------------
+  const requestWithAuth = useCallback(
+    async (endpoint, options = {}, showToast = true) => {
+      let retried = false;
 
-  // --------------------------------------------------------
-  // 💡 GET
-  // --------------------------------------------------------
-  const get = useCallback(
-    (endpoint, showToast = true) => {
-      return request(endpoint, { method: "GET" }, showToast);
+      const exec = async () => {
+        const accessToken = tokenService.getAccessToken();
+
+        return request(
+          endpoint,
+          {
+            ...options,
+            headers: {
+              ...(options.headers || {}),
+              ...(accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {}),
+            },
+          },
+          showToast
+        );
+      };
+
+      try {
+        return await exec();
+      } catch (err) {
+        //  chỉ intercept 401 đúng 1 lần
+        // if (
+        //   err?.message?.includes("401") &&
+        //   !retried &&
+        //   tokenService.getRefreshToken()
+        // )
+        if (err?.status === 401 && !retried && tokenService.getRefreshToken()) {
+          retried = true;
+
+          try {
+            // refresh token (AuthContext sẽ handle toast)
+            await fetch(`${BASE_URL}/refresh`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                refreshToken: tokenService.getRefreshToken(),
+              }),
+            })
+              .then((r) => {
+                if (!r.ok) throw new Error("Refresh failed");
+                return r.json();
+              })
+              .then((res) => {
+                if (res?.accessToken) {
+                  tokenService.setTokens(
+                    res.accessToken,
+                    tokenService.getRefreshToken()
+                  );
+                }
+              });
+
+            // 🔁 retry request đúng 1 lần
+            return await exec();
+          } catch (refreshErr) {
+            tokenService.clearTokens();
+            throw refreshErr;
+          }
+        }
+
+        throw err;
+      }
     },
     [request]
   );
 
-  // --------------------------------------------------------
-  // 💡 POST
-  // --------------------------------------------------------
+  // helper convenience methods — stable refs via useCallback
+  const get = useCallback(
+    (endpoint, showToast = true, options = {}) => {
+      return request(endpoint, { ...options, method: "GET" }, showToast);
+    },
+    [request]
+  );
+
   const post = useCallback(
-    (endpoint, body, showToast = true) =>
-      request(
+    (endpoint, body, showToast = true, options = {}) => {
+      const bodyStr = body !== undefined ? JSON.stringify(body) : undefined;
+      return request(
         endpoint,
-        {
-          method: "POST",
-          body: JSON.stringify(body),
-        },
+        { ...options, method: "POST", body: bodyStr },
         showToast
-      ),
+      );
+    },
     [request]
   );
 
-  // --------------------------------------------------------
-  // 💡 PUT — thiếu trong code gốc
-  // --------------------------------------------------------
   const put = useCallback(
-    (endpoint, body, showToast = true) =>
-      request(
+    (endpoint, body, showToast = true, options = {}) => {
+      const bodyStr = body !== undefined ? JSON.stringify(body) : undefined;
+      return request(
         endpoint,
-        {
-          method: "PUT",
-          body: JSON.stringify(body),
-        },
+        { ...options, method: "PUT", body: bodyStr },
         showToast
-      ),
+      );
+    },
     [request]
   );
 
-  // --------------------------------------------------------
-  // 💡 DELETE — thiếu trong code gốc
-  // --------------------------------------------------------
   const del = useCallback(
-    (endpoint, showToast = true) =>
-      request(endpoint, { method: "DELETE" }, showToast),
+    (endpoint, showToast = true, options = {}) => {
+      return request(endpoint, { ...options, method: "DELETE" }, showToast);
+    },
     [request]
   );
 
-  return (
-    <APIContext.Provider
-      value={{
-        loading,
-        get,
-        post,
-        put,
-        del,
+  // Expose a stable api object (useMemo)
+  const api = useMemo(
+    () => ({
+      request,
+      get,
+      post,
+      put,
+      del,
+      // 🔹 C-3
+      requestWithAuth,
+      createAbortController,
 
-        // ⚡ giữ nguyên dòng bạn thêm để tương thích AuthContext
-        api: { get, post, put, del },
-      }}
-    >
-      {children}
-    </APIContext.Provider>
+      // helpful read-only status (derived from ref) — function so not a reactive value
+      isBusy: () => pendingCountRef.current > 0,
+    }),
+    [request, get, post, put, del, requestWithAuth, createAbortController]
   );
+
+  return <APIContext.Provider value={{ api }}>{children}</APIContext.Provider>;
 };
 
-export const useAPI = () => useContext(APIContext);
-
-// 2️⃣ – LUỒNG CHẠY (FLOW) HOÀN CHỈNH
-// Khi UI hoặc AuthContext gọi:
-// await api.get("/user")
-// Luồng chạy:
-
-// (1) get()
-// → gọi request(endpoint, { method: "GET" })
-
-// (2) request()
-// bật loading = true
-
-// tự ghép baseURL
-
-// fetch()
-
-// nếu lỗi → throw
-
-// nếu ok → parse JSON
-
-// bắn toast qua toastService
-
-// tắt loading
-
-// (3) trả dữ liệu về Auth / Data / UI
-// Mọi hành động đều đúng thứ tự — không lỗi.
+// consumer hook
+export const useAPI = () => {
+  const ctx = useContext(APIContext);
+  if (!ctx) throw new Error("useAPI must be used within APIProvider");
+  return ctx;
+};

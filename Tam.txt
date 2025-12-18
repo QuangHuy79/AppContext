@@ -1,0 +1,125 @@
+📌 5 FILE “TRÁI TIM” CẦN GỬI CHO STEP 7 – AppRuntimeClient
+1️⃣ AppContext.jsx
+File core của toàn bộ AppState
+
+Chứa AppProvider, appReducer, initialState, và useApp
+
+2️⃣ AppRuntimeWrapper.jsx
+File orchestration chính
+
+Là nơi Step 7 sẽ build AppRuntimeClient vào
+
+Chúng ta đã sửa gần đây nên bạn gửi phiên bản hiện tại để chắc chắn
+
+3️⃣ StatePersistenceContext.jsx
+Bạn đã gửi bản mới nhất
+→ KHÔNG cần gửi lại
+(mình đã lưu đúng bản đó)
+
+4️⃣ apiService.js
+Step 7 cần hook vào hệ thống API
+
+Nếu không có file này, Step 7 không thể build RuntimeClient chính xác
+→ Gửi phiên bản hiện tại
+
+5️⃣ tokenService.js
+Step 7 phải đồng bộ session/refresh token
+
+File này rất quan trọng trong bước RuntimeClient Authentication
+→ Gửi phiên bản hiện tại
+
+✔️ Nếu bạn muốn gửi nhiều hơn cũng được
+Nhưng tối thiểu hãy gửi đúng 4 file sau:
+
+CẦN GỬI:
+✔ AppContext.jsx
+✔ AppRuntimeWrapper.jsx
+✔ apiService.js
+✔ tokenService.js
+
+ĐÃ LƯU SẴN RỒI:
+✔ StatePersistenceContext.jsx (không cần gửi lại)
+
+📌 Danh sách file mình cần bạn gửi thêm (rất quan trọng cho Step 7)
+1️⃣ AuthContext/AuthContext.jsx
+Đây là file quan trọng nhất cho Step 7 Security Cluster.
+
+Vì AuthProvider được lazy-load trong AppRuntimeWrapper, kiến trúc, API, reducer, và logic login/logout phải khớp 100%.
+
+2️⃣ APIContext/APIContext.jsx
+Cũng là một phần của Security Cluster (Auth nằm bên trong API provider).
+
+Cần version mới nhất để đồng bộ với apiService.js & tokenService.js.
+
+3️⃣ DataContext.jsx
+Step 7 yêu cầu tái tổ chức cả Security → Data → Sync chain.
+
+Không thể build chính xác nếu DataProvider version không đúng.
+
+4️⃣ DataSyncContext.jsx
+Step 7 cũng phải build đúng role của SyncClusterInner.
+
+5️⃣ NotificationContext.jsx
+Module cuối trong chain Data → Sync → Notification.
+
+Mình sẽ build AppRuntimeClient.jsx (Step 7)
+File này sẽ là orchestrator tối ưu:
+
+kết hợp AppContext + StatePersistenceContext
+
+load/persist state
+
+wrap 11 module contexts theo thứ tự đúng
+
+đảm bảo DataSync chạy đúng lifecycle
+
+đảm bảo UIContext nhận toast dispatch
+
+đảm bảo APIContext nhận token + user chính xác
+
+đảm bảo performance không bị re-render thừa
+
+💥 Và quan trọng nhất:
+AppRuntimeClient.jsx phải hoạt động 100% tương thích với AppRuntimeWrapper bạn đã gửi.
+SRC
+│  
+├───components
+│   └───Toast
+│           ToastContext.jsx
+│           ToastItem.jsx
+│           ToastProvider.jsx
+│           ToastProvider.scss
+│
+├───context
+│   │   AppContext.jsx
+│   │   initialState.js
+│   │   StatePersistenceContext.jsx
+│   │
+│   ├───APIContext
+│   │       APIContext.jsx
+│   │
+│   ├───AuthContext
+│   │       AuthContext.jsx
+│   │       useAuth.js
+│   │
+│   ├───modules
+│   │       CacheContext.jsx
+│   │       DataContext.jsx
+│   │       DataSyncContext.jsx
+│   │       DeviceContext.jsx
+│   │       NetworkContext.jsx
+│   │       NotificationContext.jsx
+│   │       SettingsContext.jsx
+│   │       StorageContext.jsx
+│   │       UIContext.jsx
+SRC/context/APIContext/APIContext.jsx
+SRC/context/AuthContext/AuthContext.jsx
+SRC/context/modules/CacheContext.jsx
+SRC/context/modules/DataContext.jsx
+SRC/context/modules/DataSyncContext.jsx
+SRC/context/modules/DeviceContext.jsx
+SRC/context/modules/NetworkContext.jsx
+SRC/context/modules/NotificationContext.jsx
+SRC/context/modules/SettingsContext.jsx
+SRC/context/modules/StorageContext.jsx
+SRC/context/modules/UIContext.jsx

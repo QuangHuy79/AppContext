@@ -1,3 +1,4 @@
+// SRC/context/modules/DeviceContext.jsx
 import React, {
   createContext,
   useState,
@@ -28,7 +29,8 @@ export const DeviceProvider = ({ children }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const value = useMemo(() => device, [device]);
+  // const value = useMemo(() => device, [device]);
+  const value = useMemo(() => ({ deviceInfo: device }), [device]);
 
   return (
     <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>
