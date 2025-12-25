@@ -24,7 +24,7 @@ export const initialAppState = {
 
   // Domain: network/device - useful for feature toggles
   network: {
-    isOnline: typeof navigator !== "undefined" ? navigator.Online : true,
+    isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
   },
 
   // Domain: features (placeholder for extension)

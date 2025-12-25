@@ -1,85 +1,175 @@
-// // // src/runtime/RuntimeOrchestrator.jsx
-// // import React from "react";
-
-// // // CLUSTERS
-// // import NetworkCluster from "./clusters/NetworkCluster";
-// // import DeviceCluster from "./clusters/DeviceCluster";
-// // import UICluster from "./clusters/UICluster";
-// // import {
-// //   SecurityCluster,
-// //   DataCluster,
-// //   SyncCluster,
-// // } from "./clusters/SyncCluster";
-
-// // // CORE
-// // import { AppProvider } from "../context/AppContext";
-// // import { StatePersistenceProvider } from "../context/StatePersistenceContext";
-
-// // export default function RuntimeOrchestrator({ children }) {
-// //   return (
-// //     <NetworkCluster>
-// //       <DeviceCluster>
-// //         <UICluster>
-// //           <SecurityCluster lazyLoad={false}>
-// //             <DataCluster lazyLoad={false}>
-// //               <SyncCluster lazyLoad={false}>{children}</SyncCluster>
-// //             </DataCluster>
-// //           </SecurityCluster>
-// //         </UICluster>
-// //       </DeviceCluster>
-// //     </NetworkCluster>
-// //   );
-// // }
-
-// // ================================
-// // C-10 – THAY ĐỔI DUY NHẤT (RẤT NHỎ)
-// // 👉 Chỉ bọc thêm RuntimeSnapshotProvider
-// // Không đụng cluster
-// // Không đụng children
 // // src/runtime/RuntimeOrchestrator.jsx
-// import React from "react";
-
-// import NetworkCluster from "./clusters/NetworkCluster";
-// import DeviceCluster from "./clusters/DeviceCluster";
-// import UICluster from "./clusters/UICluster";
-// import {
-//   SecurityCluster,
-//   DataCluster,
-//   SyncCluster,
-// } from "./clusters/SyncCluster";
-
 // import { RuntimeSnapshotProvider } from "./useRuntimeSnapshot";
+// import RuntimeDebugger from "../debug/RuntimeDebugger";
+// import { useNetwork } from "../context/modules/NetworkContext";
+// import { useDevice } from "../context/modules/DeviceContext";
+// import { useSettings } from "../context/modules/SettingsContext";
+// import { useUI } from "../context/modules/UIContext";
+// import { useAuth } from "../context/AuthContext/AuthContext";
+// import { useData } from "../context/modules/DataContext";
+// import { useDataSync } from "../context/modules/DataSyncContext";
 
 // export default function RuntimeOrchestrator({ children }) {
+//   const network = useNetwork();
+//   const device = useDevice();
+//   const settings = useSettings();
+//   const ui = useUI();
+//   const auth = useAuth();
+//   const data = useData();
+//   const sync = useDataSync();
+
+//   // const snapshot = {
+//   //   network: {
+//   //     isOnline: network?.isOnline,
+//   //   },
+
+//   //   device: {
+//   //     width: device?.deviceInfo?.width,
+//   //     height: device?.deviceInfo?.height,
+//   //     isMobile: device?.deviceInfo?.isMobile,
+//   //   },
+
+//   //   settings: {
+//   //     theme: settings?.state?.theme,
+//   //     locale: settings?.state?.locale,
+//   //   },
+
+//   //   ui: {
+//   //     loading: ui?.state?.loading,
+//   //   },
+
+//   //   auth: {
+//   //     isAuthenticated: auth?.isAuthenticated,
+//   //     hasUser: !!auth?.user,
+//   //   },
+
+//   //   data: {
+//   //     keysCount:
+//   //       data?.data && typeof data.data === "object"
+//   //         ? Object.keys(data.data).length
+//   //         : 0,
+//   //   },
+
+//   //   sync: {
+//   //     syncing: sync?.syncing,
+//   //     lastSync: sync?.lastSync,
+//   //   },
+//   // };
 //   const snapshot = {
-//     network: true,
-//     device: true,
-//     ui: true,
-//     security: true,
-//     data: true,
-//     sync: true,
+//     network: {
+//       isOnline: Boolean(network?.isOnline),
+//     },
+
+//     device: {
+//       width: Number(device?.width ?? 0),
+//       height: Number(device?.height ?? 0),
+//       orientation: device?.orientation || "unknown",
+//     },
+
+//     settings: {
+//       theme: settings?.theme || "light",
+//       language: settings?.language || "en",
+//     },
+
+//     ui: {
+//       ready: Boolean(ui),
+//     },
+
+//     auth: {
+//       isAuthenticated: Boolean(auth?.isAuthenticated),
+//     },
+
+//     data: {
+//       count: Array.isArray(data?.items) ? data.items.length : 0,
+//     },
+
+//     sync: {
+//       running: Boolean(sync?.syncing),
+//     },
 //   };
 
 //   return (
 //     <RuntimeSnapshotProvider value={snapshot}>
-//       <NetworkCluster>
-//         <DeviceCluster>
-//           <UICluster>
-//             <SecurityCluster lazyLoad={false}>
-//               <DataCluster lazyLoad={false}>
-//                 <SyncCluster lazyLoad={false}>{children}</SyncCluster>
-//               </DataCluster>
-//             </SecurityCluster>
-//           </UICluster>
-//         </DeviceCluster>
-//       </NetworkCluster>
+//       {/* 👇 Debugger BẮT BUỘC nằm ở đây */}
+//       {import.meta.env.DEV && <RuntimeDebugger />}
+//       {children}
+//       {/* {children} */}
 //     </RuntimeSnapshotProvider>
 //   );
 // }
 
-// ===============================
-// C-20: Sửa / thêm đúng 2 chỗ
-// src/runtime/RuntimeOrchestrator.jsx
+// // ==================================
+// // FIX ĐÚNG – DUY NHẤT (STEP 14 FINAL)
+// // ✅ RuntimeOrchestrator.jsx (chuẩn contract + guard)
+// // src/runtime/RuntimeOrchestrator.jsx
+// import { RuntimeSnapshotProvider } from "./useRuntimeSnapshot";
+// import RuntimeDebugger from "../debug/RuntimeDebugger";
+
+// import { useNetwork } from "../context/modules/NetworkContext";
+// import { useDevice } from "../context/modules/DeviceContext";
+// import { useSettings } from "../context/modules/SettingsContext";
+// import { useUI } from "../context/modules/UIContext";
+// import { useAuth } from "../context/AuthContext/AuthContext";
+// import { useData } from "../context/modules/DataContext";
+// import { useDataSync } from "../context/modules/DataSyncContext";
+
+// export default function RuntimeOrchestrator({ children }) {
+//   const network = useNetwork();
+//   const device = useDevice();
+//   const settings = useSettings();
+//   const ui = useUI();
+//   const auth = useAuth();
+//   const data = useData();
+//   const sync = useDataSync();
+
+//   const snapshot = {
+//     network: {
+//       isOnline: Boolean(network?.isOnline),
+//     },
+
+//     device: {
+//       width: Number(device?.deviceInfo?.width ?? 0),
+//       height: Number(device?.deviceInfo?.height ?? 0),
+//       isMobile: Boolean(device?.deviceInfo?.isMobile),
+//       isTablet: Boolean(device?.deviceInfo?.isTablet),
+//       isDesktop: Boolean(device?.deviceInfo?.isDesktop),
+//     },
+
+//     settings: {
+//       theme: settings?.state?.theme ?? "light",
+//       locale: settings?.state?.locale ?? "en",
+//     },
+
+//     ui: {
+//       loading: Boolean(ui?.state?.loading),
+//     },
+
+//     auth: {
+//       isAuthenticated: Boolean(auth?.isAuthenticated),
+//     },
+
+//     data: {
+//       count:
+//         data?.data && typeof data.data === "object"
+//           ? Object.keys(data.data).length
+//           : 0,
+//     },
+
+//     sync: {
+//       syncing: Boolean(sync?.syncing),
+//       lastSync: sync?.lastSync ?? null,
+//     },
+//   };
+
+//   return (
+//     <RuntimeSnapshotProvider value={snapshot}>
+//       {import.meta.env.DEV && <RuntimeDebugger />}
+//       {children}
+//     </RuntimeSnapshotProvider>
+//   );
+// }
+
+// ============================================
 import { RuntimeSnapshotProvider } from "./useRuntimeSnapshot";
 import RuntimeDebugger from "../debug/RuntimeDebugger";
 import { useNetwork } from "../context/modules/NetworkContext";
@@ -100,25 +190,42 @@ export default function RuntimeOrchestrator({ children }) {
   const sync = useDataSync();
 
   const snapshot = {
-    network: { online: network?.online },
+    network: {
+      isOnline: Boolean(network?.isOnline),
+    },
+
     device: {
-      width: device?.width,
-      height: device?.height,
-      orientation: device?.orientation,
+      width: Number(device?.width ?? 0),
+      height: Number(device?.height ?? 0),
+      orientation: device?.orientation ?? "unknown",
     },
+
     settings: {
-      theme: settings?.theme,
-      language: settings?.language,
+      theme: settings?.theme ?? "light",
+      locale: settings?.locale ?? "en",
     },
-    ui: { ready: !!ui },
-    auth: { isAuthenticated: auth?.isAuthenticated },
-    data: { count: Array.isArray(data?.items) ? data.items.length : 0 },
-    sync: { running: !!sync },
+
+    ui: {
+      loading: Boolean(ui?.loading),
+    },
+
+    auth: {
+      isAuthenticated: Boolean(auth?.isAuthenticated),
+    },
+
+    data: {
+      count: Array.isArray(data?.items) ? data.items.length : 0,
+    },
+
+    sync: {
+      running: Boolean(sync?.syncing),
+    },
   };
 
   return (
     <RuntimeSnapshotProvider value={snapshot}>
-      <RuntimeDebugger /> {/* 👈 THÊM DÒNG NÀY */}
+      {/* {children} */}
+      {import.meta.env.DEV && <RuntimeDebugger />}
       {children}
     </RuntimeSnapshotProvider>
   );

@@ -1,112 +1,57 @@
-// import React, { createContext, useContext, useMemo, useRef } from "react";
-// import PropTypes from "prop-types";
+// // useRuntimeSnapshot.jsx (C-21 hardened)
+// // Nguyên tắc
+// // Snapshot = ảnh chụp 1 lần
+// // Read-only
+// // Không trigger re-render dây chuyền.
+// // src/runtime/useRuntimeSnapshot.jsx
+// import { createContext, useContext, useRef } from "react";
 
-// /**
-//  * RuntimeSnapshotContext
-//  * - Holds an immutable snapshot of runtime state
-//  * - Used for debugging, orchestration, devtools
-//  */
 // const RuntimeSnapshotContext = createContext(null);
 
-// /* ------------------------------------------------------------------ */
-// /* Provider                                                           */
-// /* ------------------------------------------------------------------ */
-
 // export function RuntimeSnapshotProvider({ value, children }) {
-//   /**
-//    * Freeze snapshot once per update
-//    * → prevent accidental mutation from consumers
-//    */
-//   const frozenSnapshot = useMemo(() => {
-//     if (process.env.NODE_ENV !== "production" && value) {
-//       try {
-//         return Object.freeze({ ...value });
-//       } catch {
-//         return value;
-//       }
-//     }
-//     return value;
-//   }, [value]);
+//   const snapshotRef = useRef(null);
+
+//   // chỉ chụp snapshot 1 lần
+//   if (!snapshotRef.current && value) {
+//     snapshotRef.current = Object.freeze({
+//       ...value,
+//       __ts: Date.now(),
+//     });
+//   }
 
 //   return (
-//     <RuntimeSnapshotContext.Provider value={frozenSnapshot}>
+//     <RuntimeSnapshotContext.Provider value={snapshotRef.current}>
 //       {children}
 //     </RuntimeSnapshotContext.Provider>
 //   );
 // }
 
-// RuntimeSnapshotProvider.propTypes = {
-//   value: PropTypes.object,
-//   children: PropTypes.node.isRequired,
-// };
-
-// /* ------------------------------------------------------------------ */
-// /* Hooks                                                              */
-// /* ------------------------------------------------------------------ */
-
-// /**
-//  * useRuntimeSnapshot
-//  *
-//  * @param {string} [clusterKey]
-//  * @returns snapshot | snapshot[clusterKey] | null
-//  */
-// export function useRuntimeSnapshot(clusterKey) {
-//   const snapshot = useContext(RuntimeSnapshotContext);
-//   if (!snapshot) return null;
-
-//   return clusterKey ? snapshot[clusterKey] ?? null : snapshot;
+// export function useRuntimeSnapshot() {
+//   return useContext(RuntimeSnapshotContext);
 // }
 
-// /**
-//  * useRuntimeSnapshotRef
-//  * - returns stable ref (no re-render)
-//  * - useful for logging / effects
-//  */
-// export function useRuntimeSnapshotRef() {
-//   const snapshot = useContext(RuntimeSnapshotContext);
-//   const ref = useRef(snapshot);
-//   ref.current = snapshot;
-//   return ref;
-// }
-
-// /* ------------------------------------------------------------------ */
-// /* Utils                                                              */
-// /* ------------------------------------------------------------------ */
-
-// /**
-//  * Safe helper to build snapshot object
-//  * (used by AppRuntime / Orchestrator)
-//  */
-// export function createRuntimeSnapshot(payload = {}) {
-//   return {
-//     timestamp: Date.now(),
-//     ...payload,
-//   };
-// }
-
-// =================================
-// useRuntimeSnapshot.jsx (final – clean)
+// ===============================
+// useRuntimeSnapshot.jsx (CHỐT BẢN C-27)
 // src/runtime/useRuntimeSnapshot.jsx
-import React, { createContext, useContext } from "react";
+import { createContext, useContext, useRef } from "react";
 
-/**
- * Runtime snapshot context
- * Lưu trạng thái runtime đã được assemble (read-only)
- */
-const RuntimeSnapshotContext = createContext(null);
+export const RuntimeSnapshotContext = createContext(null);
 
 export function RuntimeSnapshotProvider({ value, children }) {
+  // freeze snapshot once
+  const frozenRef = useRef(null);
+
+  if (!frozenRef.current && value) {
+    frozenRef.current = value;
+  }
+
   return (
-    <RuntimeSnapshotContext.Provider value={value}>
+    <RuntimeSnapshotContext.Provider value={frozenRef.current}>
       {children}
     </RuntimeSnapshotContext.Provider>
   );
 }
 
-/**
- * useRuntimeSnapshot
- * @param {string} key - optional snapshot key
- */
 export function useRuntimeSnapshot(key) {
   const snapshot = useContext(RuntimeSnapshotContext);
   if (!snapshot) return null;
