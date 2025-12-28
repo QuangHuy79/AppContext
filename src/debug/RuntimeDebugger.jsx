@@ -50,7 +50,7 @@
 import { useEffect, useRef } from "react";
 import { useRuntimeSnapshot } from "../runtime/useRuntimeSnapshot";
 import { RuntimeSnapshotContract } from "../runtime/runtimeSnapshot.contract";
-
+import { runRuntimeGuards } from "../runtime/RuntimeGuardOrchestrator";
 export default function RuntimeDebugger() {
   const snapshot = useRuntimeSnapshot();
   const ranRef = useRef(false);
@@ -83,6 +83,8 @@ export default function RuntimeDebugger() {
 
     if (errors.length === 0) {
       console.log("🟢 SNAPSHOT CONTRACT PASSED");
+      // 🔐 STEP 16 – Run all runtime guards
+      runRuntimeGuards(snapshot);
     } else {
       console.error("🔴 SNAPSHOT CONTRACT FAILED");
       errors.forEach((e) => console.error(" ↳", e));

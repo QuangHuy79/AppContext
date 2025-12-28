@@ -1,4 +1,3 @@
-// Bản full mới nhất, đúng theo test Pha C lẫn chuẩn Pha D.
 // src/AppRuntime/RuntimeBoundary.jsx
 import React, { createContext, useContext } from "react";
 
