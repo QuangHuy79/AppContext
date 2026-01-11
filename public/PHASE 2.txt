@@ -1,0 +1,191 @@
+PHASE 2 – ROADMAP (8 BƯỚC)
+MỤC TIÊU PHASE 2
+
+Sau Phase 2, app của bạn phải trả lời được 3 câu hỏi sống còn:
+
+❓ App có đang lỗi không?
+
+❓ Lỗi xảy ra ở runtime state nào?
+
+❓ Lỗi này chỉ xảy ra ở DEV hay cả PROD?
+
+📌 Không cần fancy dashboard, chỉ cần:
+
+Log đúng
+
+Log đủ
+
+Log có ngữ cảnh
+
+🧭 OBSERVABILITY ROADMAP (8 BƯỚC)
+🔹 OBS-01 — Runtime Log Levels (FOUNDATION)
+Mục tiêu
+
+Thiết lập chuẩn log level dùng xuyên app.
+
+Log level tối thiểu
+
+debug → DEV only
+
+info → lifecycle quan trọng
+
+warn → bất thường nhưng chưa crash
+
+error → lỗi nghiêm trọng
+
+📌 DONE khi:
+
+Không còn console.log rải rác
+
+Tất cả log đi qua 1 logger duy nhất
+
+🔹 OBS-02 — Central Runtime Logger
+Mục tiêu
+
+Có 1 entry point cho toàn bộ log runtime.
+
+Nguyên tắc
+
+DEV: log đầy đủ
+
+PROD: log có kiểm soát
+
+Có thể bật/tắt theo ENV
+
+📌 DONE khi:
+
+RuntimeGuard, RuntimeBoundary, DataSync… dùng chung logger
+
+Có thể “mute” toàn bộ log PROD chỉ bằng ENV
+
+🔹 OBS-03 — Error Boundary Telemetry
+Mục tiêu
+
+Khi React crash:
+
+Không chỉ render fallback
+
+Mà ghi lại lỗi
+
+Gắn kèm:
+
+Error
+
+Stack
+
+Timestamp
+
+(sau này) snapshot
+
+📌 DONE khi:
+
+Mỗi error boundary crash đều có log error chuẩn
+
+DEV thấy stack, PROD không spam UI
+
+🔹 OBS-04 — Snapshot-on-Error (RẤT QUAN TRỌNG)
+Mục tiêu
+
+Khi RuntimeGuard / Boundary fail → chụp snapshot.
+
+Snapshot gồm:
+
+network
+
+device
+
+settings
+
+auth
+
+data summary
+
+📌 DONE khi:
+
+Lỗi runtime luôn kèm snapshot
+
+Snapshot read-only, không mutate state
+
+🔹 OBS-05 — Runtime Event Stream
+Mục tiêu
+
+Theo dõi chuỗi sự kiện runtime, không chỉ error.
+
+Ví dụ:
+
+App mounted
+
+User login
+
+Data sync start / end
+
+Hydration done
+
+📌 DONE khi:
+
+Có danh sách event runtime rõ ràng
+
+Event không spam, có semantic
+
+🔹 OBS-06 — DEV vs PROD Observability Policy
+Mục tiêu
+
+Quan sát khác nhau theo môi trường
+
+DEV	PROD
+Log chi tiết	Log tối giản
+Crash rõ	Fail silent
+Snapshot console	Snapshot internal
+
+📌 DONE khi:
+
+DEV & PROD cho hành vi khác nhau nhưng cùng codebase
+
+🔹 OBS-07 — Guard + Logger Integration
+Mục tiêu
+
+RuntimeGuard không console.log trực tiếp
+
+Mà:
+
+gọi logger
+
+logger quyết định làm gì tiếp
+
+📌 DONE khi:
+
+Guard không phụ thuộc console
+
+Dễ thay backend log sau này (Sentry, LogRocket…)
+
+🔹 OBS-08 — Observability Lock (FREEZE)
+Mục tiêu
+
+Kết thúc Phase 2 = khóa kiến trúc
+
+📌 Checklist cuối:
+
+❌ Không thêm log tự phát
+
+❌ Không log ngoài logger
+
+❌ Không snapshot ngoài RuntimeSnapshotProvider
+
+📌 DONE khi:
+
+Team follow đúng discipline
+
+App có “ý thức tự quan sát”
+
+🧠 TƯ DUY QUAN TRỌNG (CỦA PHASE 2)
+
+Observability không phải để debug DEV
+→ mà để app tự kể câu chuyện của nó trong PROD
+
+✅ KẾT LUẬN
+
+Phase 2 không làm app đẹp hơn
+
+Nhưng làm app sống sót được
+
+Đây là phase mà 90% app nhỏ bỏ qua

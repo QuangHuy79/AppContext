@@ -1,0 +1,331 @@
+⚙️ PHASE 3 — PERFORMANCE & STABILITY
+App không chỉ “chạy được”, mà phải chịu tải, chịu thời gian, chịu user ngu.
+⏱ Thời lượng khuyến nghị: 1–2 tuần
+📌 Nguyên tắc:
+Không tối ưu trước khi audit
+Không đoán – chỉ quyết định dựa trên snapshot + render trace
+🧭 PHASE 3 — HIGH LEVEL FLOW
+Audit → Stabilize → Optimize → Lock invariant
+❌ Không được đảo thứ tự
+❌ Không “tối ưu tiện tay”
+
+
+⚙️ PHASE 3 — PERFORMANCE & STABILITY (7 Steps)
+3.1 — Context & Render Audit
+3.2 — Context Topology Stabilization
+3.3 — Memoization Discipline
+3.4 — Network & Cache Policy
+3.5 — Background Process Safety
+3.6 — Runtime Stress & Long-Run Test
+3.7 — Lock Performance Invariants
+
+
+🧱 STEP 3.1 — CONTEXT & RENDER AUDIT (BẮT BUỘC)
+🎯 Mục tiêu
+Biết cái gì re-render
+Biết vì sao re-render
+Biết có đáng để tối ưu hay không
+✅ Checklist
+A. Context Inventory
+Liệt kê tất cả Context:
+Provider ở đâu?
+Value gồm gì?
+Bao nhiêu component consume?
+B. Render Trigger Trace
+Component nào:
+re-render thường xuyên?
+re-render dù props không đổi?
+C. Snapshot gắn render
+Khi render spike:
+snapshot state lúc đó là gì?
+network có bắn lại không?
+📌 Deliverable
+Danh sách:
+Context nguy hiểm
+Component re-render thừa
+
+🧠 STEP 3.2 — CONTEXT TOPOLOGY STABILIZATION
+🎯 Mục tiêu
+Không có context nào làm “global rerender bomb”
+✅ Checklist
+❌ Context chứa:
+object tạo mới mỗi render
+function inline
+✅ Tách:
+Read context
+Write context
+✅ Freeze shape:
+value reference ổn định
+📌 Invariant
+Thay đổi nhỏ → phạm vi re-render nhỏ
+
+🧩 STEP 3.3 — MEMOIZATION DISCIPLINE
+🎯 Mục tiêu
+Memo đúng thứ cần memo
+Không memo bừa
+✅ Checklist
+useMemo:
+Có thực sự cần?
+Dependency đúng chưa?
+useCallback:
+Để ổn định reference hay che bug?
+Selector:
+Có thể replace memo không?
+📌 Anti-goal
+❌ “Component này chậm → bọc React.memo”
+📌 Invariant
+Memo để giữ reference, không phải để “làm nhanh giả”
+3.3.1 — Stable Actions
+Tất cả action hooks (setTheme, toggleTheme, showToast, loadData, updateData, …) phải dùng useCallback.
+Không tạo action inline trong JSX.
+✅ Tất cả module hiện tại đã dùng useCallback.
+3.3.2 — Stable Context Value
+Context value object phải memoized bằng useMemo.
+Không include state trực tiếp nếu không cần expose.
+✅ Checked:
+SettingsContext, UIContext, CacheContext, StorageContext, NotificationContext, DataContext, DataSyncContext, AuthContext, APIContext → tất cả đều dùng useMemo cho value.
+3.3.3 — Selector Hooks
+useXXXSelector không phụ thuộc trực tiếp vào state ngoài storeRef.
+Selector chỉ lấy snapshot, không bind state reactive.
+✅ Checked:
+SettingsContext, UIContext, DataContext đều dùng storeRef.current → stable.
+3.3.4 — Facade / Public Hooks
+Facade hook (useSettings, useUI, useData) memoized hoặc sử dụng selector để tránh re-render unnecessary.
+✅ Checked:
+useSettings, useUI, useData → chỉ return selected state, không bind toàn bộ context.
+3.3.5 — Async Hook Memoization
+Async hooks dùng useCallback + mounted check.
+Async hooks không recreate function mỗi render.
+✅ Checked:
+DataContext.loadData, DataSyncContext.syncNow, AuthContext.login → stable + mounted check khi cần.
+3.3.6 — Avoid Inline Object / Function in JSX
+JSX không có inline object/function gây re-render.
+Provider value đã memoized → ✅ tất cả module ok.
+3.3.7 — Integration / Cross-module
+Memoization không phá stability cross-module (toast, dispatch).
+✅ Checked: dispatch luôn stable, không bind state từ module khác.
+3.3.8 — Checklist Pass Criteria
+useCallback cho mọi action / async function.
+useMemo cho mọi context value object.
+Selector chỉ dùng storeRef.current.
+Facade hooks không bind toàn bộ state reactive.
+Async hooks có mounted check khi setState.
+JSX không inline object/function ngoài useMemo / useCallback.
+🎯 Kết luận:
+Khi tất cả checklist trên được confirm → Step 3.3 done.
+
+Tiếp theo là 3.4 — Network & Cache Policy.
+🌐 STEP 3.4 — NETWORK & CACHE POLICY
+🎯 Mục tiêu
+Không spam API
+Không retry ngu
+Không fetch lại vì render
+✅ Checklist
+Mỗi request có:
+Cache TTL
+Retry limit
+Backoff strategy
+Request:
+Cancel khi unmount
+Pause khi tab inactive
+Error:
+Attach snapshot
+Không loop vô hạn
+📌 Deliverable
+Bảng policy cho:
+Query
+Mutation
+Background fetch
+
+🔁 STEP 3.5 — BACKGROUND PROCESS SAFETY
+🎯 Mục tiêu
+Không memory leak
+Không CPU leak
+Không network leak
+✅ Checklist
+setInterval / listener:
+Cleanup 100%
+WebSocket / subscription:
+Reconnect có kiểm soát
+Background task:
+Stop khi app hidden
+Stop khi offline
+📌 Invariant
+App idle = không tiêu tài nguyên
+Phase 3.5 — Background Process Safety (Checklist)
+1️⃣ Async Safety
+ Tất cả async hooks / callbacks đều check mounted trước khi setState
+
+ finally luôn dọn dẹp loading / syncing / timers
+
+ Errors được catch, không leak ra console ngoài mục đích debug
+
+2️⃣ Timer / Interval / Timeout Safety
+ Toast timers (UIContext / useUI) cancel đầy đủ khi component unmount
+
+ Background polling / sync timers được clear khi unmount hoặc stop process
+
+ Không tạo multiple timer khi callback gọi liên tục
+
+3️⃣ Mounted Check
+ Async fetch / update trong DataContext, DataSyncContext, AuthContext, APIContext đều dùng mounted ref hoặc cleanup function
+
+ Không gọi setState sau khi unmounted
+
+4️⃣ Cancellation / Abort
+ APIContext requests hỗ trợ AbortController → có thể cancel background fetch
+
+ Thực thi requestWithAuth / fetchAll / syncNow có thể bị hủy an toàn
+
+5️⃣ Ref & Stable Dispatch
+ Không bind state trực tiếp vào background process
+
+ StoreRef / useRef được dùng để đọc state hiện tại mà không gây re-render
+
+ Dispatch stable từ UIContext / Toast / AppContext → đảm bảo không tạo re-render ngoài ý muốn
+
+6️⃣ Error Handling
+ Lỗi background process (fetch, sync, token refresh) không crash app
+
+ Có toast / log thông báo hợp lý, không spam
+
+7️⃣ Cleanup / Unmount
+ useEffect cleanup đầy đủ cho mọi async / timer / subscription
+
+ Khi unmount, tất cả timer / background task được clear / abort
+
+ Mounted flag được set false → async hooks không set state
+
+📊 STEP 3.6 — RUNTIME STRESS & LONG-RUN TEST
+🎯 Mục tiêu
+App chạy 8–24h không degrade
+✅ Checklist
+Để app mở lâu:
+Memory có tăng không?
+Network có đều không?
+Simulate:
+User spam action
+Network chập chờn
+Snapshot:
+Trước & sau stress
+📌 Pass condition
+Không memory climb
+Không render spike vô cớ
+Không retry loop
+
+🔒 STEP 3.7 — LOCK PERFORMANCE INVARIANTS
+🎯 Mục tiêu
+Không ai phá Phase 3 về sau
+✅ Checklist
+Document:
+Context rules
+Memo rules
+Network rules
+Guard:
+DEV warning nếu phá invariant
+Snapshot:
+Bắt render anomaly
+📌 Outcome
+
+Phase 3 trở thành luật chơi, không phải nỗ lực cá nhân
+
+✅ PHASE 3 DONE = GÌ?
+✔ App không lag theo thời gian
+✔ Không render ngầm
+✔ Không spam network
+✔ Không leak tài nguyên
+✔ Tối ưu có số liệu, không cảm giác
+
+
+
+
+
+
+
+
+🔍 STEP 3.1 — CONTEXT & RENDER AUDIT
+📥 THỨ TỰ FILE CẦN GỬI (THEO ĐÚNG LUỒNG)
+Bạn gửi đúng thứ tự, mỗi lần gửi 1 file hoặc 1 nhóm file nhỏ, mình check xong mới chuyển tiếp.
+
+🥇 GROUP 1 — ROOT CONTEXT TOPOLOGY (BẮT BUỘC)
+👉 Mục tiêu: hiểu provider tree gốc & scope render
+
+Gửi theo thứ tự:
+
+src/context/AppContext.jsx
+
+src/context/initialState.js
+
+src/App.jsx
+
+src/main.jsx
+
+⛔ Chưa gửi xong GROUP 1 → không nhận file khác
+
+🥈 GROUP 2 — RUNTIME / GLOBAL PROVIDERS
+👉 Mục tiêu: xác định render boundary cấp runtime
+
+src/runtime/AppRuntimeWrapper.jsx
+
+src/runtime/AppRuntime.jsx
+
+src/runtime/RuntimeOrchestrator.jsx
+
+🥉 GROUP 3 — MODULE CONTEXTS (CORE)
+👉 Mục tiêu: audit context dễ gây global re-render
+
+Gửi theo đúng thứ tự này:
+
+src/context/modules/UIContext.jsx
+
+src/context/modules/NetworkContext.jsx
+
+src/context/modules/DeviceContext.jsx
+
+src/context/modules/DataContext.jsx
+
+src/context/modules/DataSyncContext.jsx
+
+⛔ Các context còn lại chưa tới lượt
+
+🏅 GROUP 4 — AUTH / API / STATE PERSISTENCE
+👉 Mục tiêu: audit context có side-effect + async
+
+src/context/AuthContext/AuthContext.jsx
+
+src/context/APIContext/APIContext.jsx
+
+src/context/StatePersistenceContext.jsx
+
+🧩 GROUP 5 — HIGH-TRAFFIC CONSUMERS
+👉 Mục tiêu: tìm component re-render thừa
+
+src/hooks/useApp.js
+
+src/hooks/useUI.js
+
+src/hooks/useNetwork.js
+
+src/hooks/useData.js
+
+🧱 GROUP 6 — RENDER SPIKE EVIDENCE (NẾU CÓ)
+(Không bắt buộc, nhưng rất mạnh)
+
+src/debug/RuntimeDebugger.jsx
+
+Snapshot / log liên quan render spike
+
+📌 QUY TẮC TRONG STEP 3.1 (NHẮC LẠI)
+❌ Không sửa code trước khi gửi
+
+❌ Không gửi dư file
+
+❌ Không giải thích bằng lời
+
+✅ Chỉ gửi code gốc
+
+
+
+
+
+

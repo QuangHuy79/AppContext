@@ -1,17 +1,37 @@
-// import { Guards } from "../RuntimeGuard";
-
-// export function guardNetwork(snapshot) {
-//   const net = snapshot.network;
-//   if (!net) return false;
-
-//   return Guards.boolean(net.isOnline, "network.isOnline", "RG-NET-01");
-// }
+// File network.guard.js — FINAL
+// src/runtime/guards/network.guard.js
+import { emitError } from "../../obs/errorSink";
 
 export function guardNetwork(snapshot) {
-  const online = snapshot?.network?.isOnline;
+  const network = snapshot?.network;
 
-  if (typeof online !== "boolean") {
-    console.error("[RG-NET-01] network.isOnline expected boolean", online);
+  if (!network) {
+    emitError({
+      source: "RG-NET-01",
+      message: "snapshot.network is missing",
+      snapshot,
+    });
+    return false;
+  }
+
+  if (typeof network.online !== "boolean") {
+    emitError({
+      source: "RG-NET-02",
+      message: "network.online expected boolean",
+      snapshot,
+    });
+    return false;
+  }
+
+  if (
+    network.effectiveType !== undefined &&
+    typeof network.effectiveType !== "string"
+  ) {
+    emitError({
+      source: "RG-NET-03",
+      message: "network.effectiveType expected string",
+      snapshot,
+    });
     return false;
   }
 

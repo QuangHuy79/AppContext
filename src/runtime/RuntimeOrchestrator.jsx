@@ -1,25 +1,54 @@
+// FILE FULL — RuntimeOrchestrator.jsx (FIXED — PHASE 3.3 PASS)
 // src/runtime/RuntimeOrchestrator.jsx
+import { useEffect } from "react";
 import { RuntimeSnapshotProvider } from "./useRuntimeSnapshot";
+
 import { useNetwork } from "../context/modules/NetworkContext";
 import { useDevice } from "../context/modules/DeviceContext";
 import { useSettings } from "../context/modules/SettingsContext";
 import { useUI } from "../context/modules/UIContext";
 import { useAuth } from "../context/AuthContext/AuthContext";
-import { useData } from "../context/modules/DataContext";
+import { useDataActions } from "../context/modules/DataContext";
 import { useDataSync } from "../context/modules/DataSyncContext";
-import { RuntimeGuard } from "./RuntimeGuard";
 
 export default function RuntimeOrchestrator({ children }) {
+  /* -----------------------------
+     SYSTEM SIGNALS
+  ------------------------------ */
   const network = useNetwork();
-  const device = useDevice(); // { deviceInfo }
+  const device = useDevice();
   const settings = useSettings();
-  const ui = useUI();
   const auth = useAuth();
-  const data = useData();
+
+  /* -----------------------------
+     UI SIGNAL (COARSE)
+  ------------------------------ */
+  const ui = useUI();
+
+  /* -----------------------------
+     DATA LAYER (ACTIONS ONLY)
+  ------------------------------ */
+  const { loadData } = useDataActions();
+
+  /* -----------------------------
+     SYNC SIGNAL
+  ------------------------------ */
   const sync = useDataSync();
+
+  /* -----------------------------
+     Boot orchestration
+  ------------------------------ */
+  useEffect(() => {
+    if (auth?.isAuthenticated && network?.isOnline) {
+      loadData();
+    }
+  }, [auth?.isAuthenticated, network?.isOnline, loadData]);
 
   const d = device?.deviceInfo;
 
+  /* -----------------------------
+     RUNTIME SNAPSHOT
+  ------------------------------ */
   const snapshot = {
     network: {
       isOnline: Boolean(network?.isOnline),
@@ -47,23 +76,16 @@ export default function RuntimeOrchestrator({ children }) {
     },
 
     data: {
-      count: Array.isArray(data?.items) ? data.items.length : 0,
+      ready: Boolean(auth?.isAuthenticated),
     },
 
     sync: {
       running: Boolean(sync?.syncing),
     },
   };
-  if (import.meta.env.DEV) {
-    Object.freeze(snapshot);
-    Object.values(snapshot).forEach((v) => {
-      if (v && typeof v === "object") Object.freeze(v);
-    });
-  }
 
   return (
     <RuntimeSnapshotProvider value={snapshot}>
-      {import.meta.env.DEV && <RuntimeGuard />}
       {children}
     </RuntimeSnapshotProvider>
   );

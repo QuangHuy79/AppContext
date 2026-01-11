@@ -1,168 +1,160 @@
-// // src/context/modules/UIContext.jsx
-// import React, { createContext, useReducer, useContext } from "react";
-
-// // ---------------------
-// // Initial UI state
-// // ---------------------
-// const initialUIState = {
-//   sidebarOpen: false,
-//   toast: null,
-//   loading: false,
-// };
-
-// // ---------------------
-// // Reducer
-// // ---------------------
-// function uiReducer(state, action) {
-//   switch (action.type) {
-//     case "UI/TOGGLE_SIDEBAR":
-//       return { ...state, sidebarOpen: !state.sidebarOpen };
-//     case "UI/SET_SIDEBAR":
-//       return { ...state, sidebarOpen: action.payload };
-//     case "UI/SHOW_TOAST":
-//       return { ...state, toast: action.payload };
-//     case "UI/CLEAR_TOAST":
-//       return { ...state, toast: null };
-//     case "UI/SET_LOADING":
-//       return { ...state, loading: action.payload };
-//     default:
-//       return state;
-//   }
-// }
-
-// // ---------------------
-// // Context
-// // ---------------------
-// const UIContext = createContext(null);
-
-// // ---------------------
-// // Provider
-// // ---------------------
-// export function UIProvider({ children }) {
-//   const [state, dispatch] = useReducer(uiReducer, initialUIState);
-//   const [logs, setLogs] = React.useState([]);
-
-//   // ⭐ log function
-//   const log = (message) => {
-//     setLogs((prev) => [...prev, message]);
-//     console.debug("[UI]", message); // log ra console
-//   };
-//   const value = {
-//     state,
-//     dispatch,
-//     toast: state.toast, // ✅ trực tiếp cung cấp toast
-//     loading: state.loading, // ✅ trực tiếp cung cấp loading
-//     sidebarOpen: state.sidebarOpen,
-//     log, // ⬅ thêm log function
-//     logs, // optional: giữ lại log history
-//   };
-
-//   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
-// }
-
-// // ---------------------
-// // Hook
-// // ---------------------
-// export function useUIContext() {
-//   const context = useContext(UIContext);
-//   if (!context) throw new Error("useUIContext must be used within UIProvider");
-//   return context;
-// }
-
-// // Hook tiện lợi để AppProvider dùng trực tiếp
-// export const useUI = () => useUIContext();
-
-// // ---------------------
-// // Exports thêm (nếu cần test)
-// export { initialUIState, uiReducer };
-
-// =============================================
-// BẢN SỬA CHUẨN STEP 8
-// src/context/modules/UIContext.jsx
+// src/context/modules/UIContext.jsx — FINAL (3.7.1 LOCKED)
 import React, {
   createContext,
   useReducer,
   useContext,
-  useMemo,
   useCallback,
-  useState,
+  useRef,
+  useMemo,
 } from "react";
 
-// ---------------------
-// Initial UI state
-// ---------------------
+/* --------------------------------------------------
+   1️⃣ Initial UI state
+-------------------------------------------------- */
 const initialUIState = {
   sidebarOpen: false,
   toast: null,
   loading: false,
 };
 
-// ---------------------
-// Reducer
-// ---------------------
+/* --------------------------------------------------
+   2️⃣ Reducer (PURE)
+-------------------------------------------------- */
 function uiReducer(state, action) {
   switch (action.type) {
     case "UI/TOGGLE_SIDEBAR":
       return { ...state, sidebarOpen: !state.sidebarOpen };
+
     case "UI/SET_SIDEBAR":
       return { ...state, sidebarOpen: action.payload };
+
     case "UI/SHOW_TOAST":
       return { ...state, toast: action.payload };
+
     case "UI/CLEAR_TOAST":
       return { ...state, toast: null };
+
     case "UI/SET_LOADING":
       return { ...state, loading: action.payload };
+
     default:
       return state;
   }
 }
 
-// ---------------------
-// Context
-// ---------------------
+/* ==================================================
+   CONTEXT CONTRACT — DO NOT BREAK (PHASE 3.7.1)
+   --------------------------------------------------
+   - Context chỉ expose:
+     • storeRef (read-only snapshot)
+     • stable actions (useCallback)
+   - TUYỆT ĐỐI KHÔNG:
+     • expose state
+     • expose dispatch
+     • spread state vào value
+   --------------------------------------------------
+   Mọi vi phạm làm BREAK Phase 3.7 invariant
+================================================== */
 const UIContext = createContext(null);
 
-// ---------------------
-// Provider
-// ---------------------
+/* --------------------------------------------------
+   3️⃣ Provider
+-------------------------------------------------- */
 export function UIProvider({ children }) {
   const [state, dispatch] = useReducer(uiReducer, initialUIState);
-  const [logs, setLogs] = useState([]);
 
-  // ✅ stable log function
-  const log = useCallback((message) => {
-    setLogs((prev) => [...prev, message]);
-    console.debug("[UI]", message);
+  /**
+   * storeRef giữ UI snapshot mới nhất
+   * → Context value KHÔNG đổi khi state đổi
+   */
+  const storeRef = useRef(state);
+  storeRef.current = state;
+
+  /* -----------------------------
+     Actions (STABLE)
+  ------------------------------ */
+  const toggleSidebar = useCallback(() => {
+    dispatch({ type: "UI/TOGGLE_SIDEBAR" });
   }, []);
 
-  // ✅ memoized value (STEP 8 requirement)
+  const setSidebar = useCallback((open) => {
+    dispatch({ type: "UI/SET_SIDEBAR", payload: open });
+  }, []);
+
+  const showToast = useCallback((toast) => {
+    dispatch({ type: "UI/SHOW_TOAST", payload: toast });
+  }, []);
+
+  const clearToast = useCallback(() => {
+    dispatch({ type: "UI/CLEAR_TOAST" });
+  }, []);
+
+  const setLoading = useCallback((loading) => {
+    dispatch({ type: "UI/SET_LOADING", payload: loading });
+  }, []);
+
+  /**
+   * 🔒 Context value LOCKED (STABLE FOREVER)
+   */
   const value = useMemo(
     () => ({
-      state,
-      dispatch,
-      toast: state.toast,
-      loading: state.loading,
-      sidebarOpen: state.sidebarOpen,
-      log,
-      logs,
+      storeRef,
+      toggleSidebar,
+      setSidebar,
+      showToast,
+      clearToast,
+      setLoading,
     }),
-    [state, log, logs]
+    []
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
 }
 
-// ---------------------
-// Hooks
-// ---------------------
-export function useUIContext() {
-  const context = useContext(UIContext);
-  if (!context) throw new Error("useUIContext must be used within UIProvider");
-  return context;
+/* --------------------------------------------------
+   4️⃣ Base Hook (INTERNAL)
+-------------------------------------------------- */
+function useUIStore() {
+  const ctx = useContext(UIContext);
+  if (!ctx) {
+    throw new Error("useUI must be used within UIProvider");
+  }
+  return ctx;
 }
 
-export const useUI = () => useUIContext();
+/* --------------------------------------------------
+   5️⃣ Selector Hook (PUBLIC)
+-------------------------------------------------- */
+export const useUISelector = (selector) => {
+  const { storeRef } = useUIStore();
+  return selector(storeRef.current);
+};
 
-// ---------------------
-// Exports thêm (giữ nguyên cho test)
+/* --------------------------------------------------
+   6️⃣ Action Hook (PUBLIC)
+-------------------------------------------------- */
+export const useUIActions = () => {
+  const { toggleSidebar, setSidebar, showToast, clearToast, setLoading } =
+    useUIStore();
+
+  return {
+    toggleSidebar,
+    setSidebar,
+    showToast,
+    clearToast,
+    setLoading,
+  };
+};
+
+/* --------------------------------------------------
+   7️⃣ Facade Hook (LEGACY / RUNTIME)
+-------------------------------------------------- */
+export const useUI = () => {
+  const loading = useUISelector((s) => s.loading);
+  return { loading };
+};
+
+/* --------------------------------------------------
+   8️⃣ Test exports
+-------------------------------------------------- */
 export { initialUIState, uiReducer };

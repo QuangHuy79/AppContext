@@ -1,7 +1,10 @@
-// // SRC/context/modules/StorageContext.jsx
-// import React, { createContext, useCallback, useContext } from "react";
+// // src/context/modules/StorageContext.jsx
+// import React, { createContext, useCallback, useContext, useMemo } from "react";
 // import toastService from "../../services/toastService";
 
+// /* --------------------------------------------------
+//    Context
+// -------------------------------------------------- */
 // export const StorageContext = createContext({
 //   setItem: () => {},
 //   getItem: () => {},
@@ -9,117 +12,140 @@
 //   clear: () => {},
 // });
 
+// /* --------------------------------------------------
+//    Provider
+// -------------------------------------------------- */
 // export const StorageProvider = ({ children }) => {
-//   // ✅ Set item (auto stringify object)
+//   /* -----------------------------
+//      Set item (NO UI side-effect)
+//   ------------------------------ */
 //   const setItem = useCallback((key, value, useSession = false) => {
 //     try {
 //       const store = useSession ? sessionStorage : localStorage;
 //       const data = typeof value === "string" ? value : JSON.stringify(value);
 //       store.setItem(key, data);
+//     } catch {
 //       toastService.show(
-//         "success",
-//         `Đã lưu ${key} vào ${useSession ? "session" : "local"} storage`,
-//         "Storage"
+//         "error",
+//         `Không thể lưu dữ liệu (${key})`,
+//         "Storage Error"
 //       );
-//     } catch (err) {
-//       console.error("Storage setItem error:", err);
-//       toastService.show("error", `Lỗi khi lưu ${key}`, "Storage Error");
 //     }
 //   }, []);
 
-//   // ✅ Get item (auto parse JSON)
+//   /* -----------------------------
+//      Get item (SAFE)
+//   ------------------------------ */
 //   const getItem = useCallback((key, useSession = false) => {
 //     try {
 //       const store = useSession ? sessionStorage : localStorage;
 //       const data = store.getItem(key);
 //       if (!data) return null;
-//       return JSON.parse(data);
+
+//       try {
+//         return JSON.parse(data);
+//       } catch {
+//         return data;
+//       }
 //     } catch {
-//       return null; // fallback nếu không phải JSON
+//       return null;
 //     }
 //   }, []);
 
-//   // ✅ Remove item
+//   /* -----------------------------
+//      Remove item (NO UI side-effect)
+//   ------------------------------ */
 //   const removeItem = useCallback((key, useSession = false) => {
 //     try {
 //       const store = useSession ? sessionStorage : localStorage;
 //       store.removeItem(key);
+//     } catch {
 //       toastService.show(
-//         "info",
-//         `Đã xóa ${key} khỏi ${useSession ? "session" : "local"} storage`,
-//         "Storage"
+//         "error",
+//         `Không thể xóa dữ liệu (${key})`,
+//         "Storage Error"
 //       );
-//     } catch (err) {
-//       toastService.show("error", `Không thể xóa ${key}`, "Storage Error");
 //     }
 //   }, []);
 
-//   // ✅ Clear toàn bộ storage
+//   /* -----------------------------
+//      Clear storage
+//   ------------------------------ */
 //   const clear = useCallback((useSession = false) => {
 //     try {
 //       const store = useSession ? sessionStorage : localStorage;
 //       store.clear();
-//       toastService.show(
-//         "warning",
-//         `Đã xóa toàn bộ ${useSession ? "session" : "local"} storage`,
-//         "Storage"
-//       );
-//     } catch (err) {
+//     } catch {
 //       toastService.show("error", "Không thể clear storage", "Storage Error");
 //     }
 //   }, []);
 
-//   // 🔹 Map thêm tên function cho IntegrationRunner
+//   // aliases (BACKWARD COMPAT)
 //   const saveData = setItem;
 //   const getData = getItem;
 //   const clearData = clear;
 
+//   /* --------------------------------------------------
+//      Memoized value (LOCKED)
+//   -------------------------------------------------- */
+//   const value = useMemo(
+//     () => ({
+//       setItem,
+//       getItem,
+//       removeItem,
+//       clear,
+//       saveData,
+//       getData,
+//       clearData,
+//     }),
+//     [setItem, getItem, removeItem, clear]
+//   );
+
 //   return (
-//     <StorageContext.Provider
-//       value={{
-//         setItem,
-//         getItem,
-//         removeItem,
-//         clear,
-//         saveData,
-//         getData,
-//         clearData,
-//       }}
-//     >
-//       {children}
-//     </StorageContext.Provider>
+//     <StorageContext.Provider value={value}>{children}</StorageContext.Provider>
 //   );
 // };
 
+// /* --------------------------------------------------
+//    Hook
+// -------------------------------------------------- */
 // export const useStorage = () => useContext(StorageContext);
 
-// ==================================
-// BẢN SỬA CHUẨN STEP 8
-// SRC/context/modules/StorageContext.jsx
+// ===================================
+// BẢN SỬA ĐỀ XUẤT (FULL FILE – SAFE)
+// src/context/modules/StorageContext.jsx
 import React, { createContext, useCallback, useContext, useMemo } from "react";
 import toastService from "../../services/toastService";
 
+/* --------------------------------------------------
+   Context
+-------------------------------------------------- */
 export const StorageContext = createContext({
   setItem: () => {},
   getItem: () => {},
   removeItem: () => {},
   clear: () => {},
+  setPersistedState: () => {}, // 🔐 NEW (PHASE 4)
 });
 
+/* --------------------------------------------------
+   Provider
+-------------------------------------------------- */
 export const StorageProvider = ({ children }) => {
+  /* -----------------------------
+     Generic storage API (UNCHANGED)
+  ------------------------------ */
   const setItem = useCallback((key, value, useSession = false) => {
     try {
       const store = useSession ? sessionStorage : localStorage;
       const data = typeof value === "string" ? value : JSON.stringify(value);
       store.setItem(key, data);
+    } catch {
       toastService.show(
-        "success",
-        `Đã lưu ${key} vào ${useSession ? "session" : "local"} storage`,
-        "Storage"
+        "error",
+        `Không thể lưu dữ liệu (${key})`,
+        "Storage Error"
       );
-    } catch (err) {
-      console.error("Storage setItem error:", err);
-      toastService.show("error", `Lỗi khi lưu ${key}`, "Storage Error");
     }
   }, []);
 
@@ -128,7 +154,12 @@ export const StorageProvider = ({ children }) => {
       const store = useSession ? sessionStorage : localStorage;
       const data = store.getItem(key);
       if (!data) return null;
-      return JSON.parse(data);
+
+      try {
+        return JSON.parse(data);
+      } catch {
+        return data;
+      }
     } catch {
       return null;
     }
@@ -138,13 +169,12 @@ export const StorageProvider = ({ children }) => {
     try {
       const store = useSession ? sessionStorage : localStorage;
       store.removeItem(key);
-      toastService.show(
-        "info",
-        `Đã xóa ${key} khỏi ${useSession ? "session" : "local"} storage`,
-        "Storage"
-      );
     } catch {
-      toastService.show("error", `Không thể xóa ${key}`, "Storage Error");
+      toastService.show(
+        "error",
+        `Không thể xóa dữ liệu (${key})`,
+        "Storage Error"
+      );
     }
   }, []);
 
@@ -152,33 +182,50 @@ export const StorageProvider = ({ children }) => {
     try {
       const store = useSession ? sessionStorage : localStorage;
       store.clear();
-      toastService.show(
-        "warning",
-        `Đã xóa toàn bộ ${useSession ? "session" : "local"} storage`,
-        "Storage"
-      );
     } catch {
       toastService.show("error", "Không thể clear storage", "Storage Error");
     }
   }, []);
 
-  // aliases giữ nguyên
-  const saveData = setItem;
-  const getData = getItem;
-  const clearData = clear;
+  /* --------------------------------------------------
+     🔐 PHASE 4 — Persist Gate (SETTINGS ONLY)
+  -------------------------------------------------- */
+  const setPersistedState = useCallback(({ persistKey, version, settings }) => {
+    if (!persistKey || !version || !settings) return;
 
-  // ✅ memoized value (STEP 8)
+    try {
+      localStorage.setItem(
+        persistKey,
+        JSON.stringify({
+          version,
+          settings,
+        })
+      );
+    } catch {
+      toastService.show(
+        "error",
+        "Không thể lưu persisted state",
+        "Storage Error"
+      );
+    }
+  }, []);
+
+  /* --------------------------------------------------
+     Memoized value
+  -------------------------------------------------- */
   const value = useMemo(
     () => ({
       setItem,
       getItem,
       removeItem,
       clear,
-      saveData,
-      getData,
-      clearData,
+      setPersistedState, // 👈 expose SAFE API
+      // backward compat
+      saveData: setItem,
+      getData: getItem,
+      clearData: clear,
     }),
-    [setItem, getItem, removeItem, clear]
+    [setItem, getItem, removeItem, clear, setPersistedState]
   );
 
   return (
@@ -186,4 +233,7 @@ export const StorageProvider = ({ children }) => {
   );
 };
 
+/* --------------------------------------------------
+   Hook
+-------------------------------------------------- */
 export const useStorage = () => useContext(StorageContext);

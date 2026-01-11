@@ -1,0 +1,84 @@
+🧱 PHASE 0 — FOUNDATION (DONE ✅)
+Bạn đã hoàn thành phase này, rất ít app làm tới.
+Runtime Snapshot
+Guard system (DEV / PROD split)
+Fail-fast policy
+State hydration an toàn
+Context topology rõ ràng
+📌 Nguyên tắc:
+Phase này đóng băng, không refactor nữa.
+
+🔐 PHASE 1 — PRODUCTION HARDENING (DONE ✅)
+Chính là “PRODUCTION HARDENING – 8 BƯỚC” bạn vừa làm.
+Snapshot contract
+Runtime guard
+DEV crash / PROD silent
+Boundary & guard order
+PROD build verification
+📌 Kết luận:
+App đã đủ điều kiện “được deploy”, nhưng chưa đủ điều kiện “sống lâu”.
+
+👁️ PHASE 2 — OBSERVABILITY (BẮT BUỘC)(DONE ✅)
+Không có phase này = production mù
+Mục tiêu
+Biết app chết ở đâu
+Biết user nào bị
+Biết snapshot lúc đó như thế nào
+Trục chính
+Error pipeline
+Runtime snapshot attach
+Log levels (DEV / STAGING / PROD)
+📌 Ví dụ outcome:
+PROD lỗi → có log
+Log → gắn snapshot
+Snapshot → truy ra root cause
+
+⚙️ PHASE 3 — PERFORMANCE & STABILITY(DONE ✅)
+App chạy được ≠ app chịu tải
+Mục tiêu
+Không re-render vô lý
+Không spam network
+Không leak memory
+Trục chính
+Context render audit
+Memoization discipline
+Cache + retry policy
+Background sync safety
+
+🔐 PHASE 4 — SECURITY & DATA SAFETY
+Frontend production không được tin user
+Mục tiêu
+Token an toàn
+Data không rò
+State không bị abuse
+Trục chính
+Token lifecycle
+Sensitive state isolation
+ENV validation
+XSS / injection hardening
+
+🚀 PHASE 5 — RELEASE & OPERATIONS
+Deploy không phải là copy build
+Mục tiêu
+Deploy có kiểm soát
+Rollback được
+Không “deploy cầu may”
+Trục chính
+ENV matrix (dev / staging / prod)
+Feature flags
+Versioned state migration
+Kill-switch logic
+
+🧪 PHASE 6 — TESTING (TỐI THIỂU NHƯNG ĐÚNG)
+Không test mọi thứ — chỉ test điểm chết
+Mục tiêu
+Guard không được fail ngầm
+Reducer không phá invariant
+Snapshot không lệch contract
+
+📈 PHASE 7 — SCALING & MAINTENANCE
+Khi app lớn, kỹ thuật kém sẽ giết tốc độ
+Mục tiêu
+Dễ thêm module
+Không sợ sửa core
+Dev mới không phá runtime

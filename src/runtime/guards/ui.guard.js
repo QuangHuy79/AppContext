@@ -1,15 +1,24 @@
+// File final version
 // src/runtime/guards/ui.guard.js
+import { emitError } from "../../obs/errorSink";
 
 export function guardUI(snapshot) {
-  if (!snapshot || !snapshot.ui) {
-    console.error("🛑 [RG-UI-01] Missing ui snapshot");
+  const ui = snapshot?.ui;
+  if (!ui) {
+    emitError({
+      source: "RG-UI-01",
+      message: "snapshot.ui is missing",
+      snapshot,
+    });
     return false;
   }
 
-  const { ready } = snapshot.ui;
-
-  if (typeof ready !== "boolean") {
-    console.error("🛑 [RG-UI-02] ui.ready expected boolean", ready);
+  if (typeof ui.ready !== "boolean") {
+    emitError({
+      source: "RG-UI-02",
+      message: `ui.ready expected boolean, got '${ui.ready}'`,
+      snapshot,
+    });
     return false;
   }
 

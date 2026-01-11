@@ -1,17 +1,20 @@
-// // RuntimeDebugger – bản chuẩn
+// // RuntimeDebugger CHỈ CHECK CONTRACT (READ-ONLY)
+// // src/debug/RuntimeDebugger.jsx
 // import { useEffect, useRef } from "react";
 // import { useRuntimeSnapshot } from "../runtime/useRuntimeSnapshot";
 // import { RuntimeSnapshotContract } from "../runtime/runtimeSnapshot.contract";
+// import { runRuntimeGuards } from "../runtime/RuntimeGuardOrchestrator";
 // export default function RuntimeDebugger() {
 //   const snapshot = useRuntimeSnapshot();
-//   const checkedRef = useRef(false);
+//   const ranRef = useRef(false);
 
 //   useEffect(() => {
-//     if (!snapshot || checkedRef.current) return;
-//     checkedRef.current = true;
+//     if (!snapshot) return;
+//     if (ranRef.current) return;
+//     ranRef.current = true;
 
 //     console.group("🧩 RuntimeDebugger (C-34)");
-//     console.log("📸 Runtime Snapshot:", snapshot);
+//     // console.log("📸 Runtime Snapshot:", snapshot);
 
 //     const errors = [];
 
@@ -32,10 +35,12 @@
 //     });
 
 //     if (errors.length === 0) {
-//       console.log("🟢 [C-34] SNAPSHOT CONTRACT PASSED");
+//       // console.log("🟢 SNAPSHOT CONTRACT PASSED");
+//       // 🔐 STEP 16 – Run all runtime guards
+//       runRuntimeGuards(snapshot);
 //     } else {
-//       console.error("🔴 [C-34] SNAPSHOT CONTRACT FAILED");
-//       errors.forEach((e) => console.error("   ↳", e));
+//       console.error("🔴 SNAPSHOT CONTRACT FAILED");
+//       errors.forEach((e) => console.error(" ↳", e));
 //     }
 
 //     console.groupEnd();
@@ -44,14 +49,20 @@
 //   return null;
 // }
 
-// ============================================
-// RuntimeDebugger CHỈ CHECK CONTRACT (READ-ONLY)
+// ===========================================
+// FILE FULL — RuntimeDebugger.jsx (CLEAN + LOCKED)
 // src/debug/RuntimeDebugger.jsx
 import { useEffect, useRef } from "react";
 import { useRuntimeSnapshot } from "../runtime/useRuntimeSnapshot";
 import { RuntimeSnapshotContract } from "../runtime/runtimeSnapshot.contract";
 import { runRuntimeGuards } from "../runtime/RuntimeGuardOrchestrator";
+
 export default function RuntimeDebugger() {
+  // 🔒 DEV ONLY
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+
   const snapshot = useRuntimeSnapshot();
   const ranRef = useRef(false);
 
@@ -59,9 +70,6 @@ export default function RuntimeDebugger() {
     if (!snapshot) return;
     if (ranRef.current) return;
     ranRef.current = true;
-
-    console.group("🧩 RuntimeDebugger (C-34)");
-    console.log("📸 Runtime Snapshot:", snapshot);
 
     const errors = [];
 
@@ -82,15 +90,10 @@ export default function RuntimeDebugger() {
     });
 
     if (errors.length === 0) {
-      console.log("🟢 SNAPSHOT CONTRACT PASSED");
-      // 🔐 STEP 16 – Run all runtime guards
+      // DEV-ONLY runtime guards
       runRuntimeGuards(snapshot);
-    } else {
-      console.error("🔴 SNAPSHOT CONTRACT FAILED");
-      errors.forEach((e) => console.error(" ↳", e));
     }
-
-    console.groupEnd();
+    // ❌ NO console.* — errors should surface via guard system
   }, [snapshot]);
 
   return null;
