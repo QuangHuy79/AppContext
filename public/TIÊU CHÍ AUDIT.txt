@@ -1,0 +1,420 @@
+TIÊU CHÍ AUDIT
+I. TIÊU CHÍ AUDIT (đã khóa)
+Core được coi là “hệ thần kinh / não bộ hoàn chỉnh” nếu thỏa đồng thời 5 điều kiện sinh học sau:
+Self-contained nervous system
+→ có đủ các cơ quan sống còn, không lệ thuộc “cơ thể cụ thể”
+Decision authority
+→ không chỉ phản ứng, mà có quyền ra lệnh
+Temporal awareness
+→ biết mình đang ở giai đoạn sống nào
+Failure self-protection
+→ biết tự khóa / tự hạ cấp khi bị tổn thương
+Attachment-safe
+→ tay chân gắn vào không thể làm não chết
+Audit sẽ trả lời nhị phân:
+👉 ĐÃ LÀ NÃO BỘ hay CHƯA
+Sau đó mới có roadmap.
+
+II. AUDIT THEO TỪNG LỚP
+1. Core đã self-contained chưa?
+Kết luận: GẦN ĐỦ, nhưng chưa hoàn chỉnh
+Dấu hiệu ĐẠT
+context/ chia theo domain thần kinh, không theo UI
+runtime/ tồn tại độc lập, có orchestrator, boundary, snapshot
+obs/ + tests/ chứng minh core tự biết bảo vệ invariant
+👉 Core không phải UI-driven → đạt điều kiện sống độc lập.
+Dấu hiệu CHƯA ĐỦ
+Core vẫn phụ thuộc React lifecycle để “sống”
+Không thấy headless runtime mode (não không có cơ thể)
+📌 Não bộ đúng nghĩa phải tồn tại được dù chưa gắn tay chân
+→ hiện tại core cần React tree để tồn tại
+➡️ Chưa đạt điều kiện (1)
+2. Core có decision authority không?
+Kết luận: CHƯA
+Những gì core đang làm rất tốt
+Nhận signal (action)
+Validate (guards)
+Enforce invariant (reducer)
+Ghi nhớ (snapshot)
+👉 Đây là tủy sống + phản xạ, chưa phải “não”.
+Dấu hiệu thiếu quyết định
+Không thấy khái niệm:
+command
+intent → decision → execution
+Feature flags / kill switch:
+đang là configuration
+
+chưa phải mệnh lệnh phát ra
+📌 Hiện tại:
+Core trả state,
+còn “nên làm gì tiếp theo” → do tay chân suy ra.
+➡️ Chưa đạt điều kiện (2)
+3. Core có nhận thức thời gian sống (phase) không?
+Kết luận: NGẦM CÓ, NHƯNG CHƯA FORMAL
+Dấu hiệu có
+Roadmap chia phase rất rõ
+Runtime có:
+ready
+boundary
+orchestrator
+Snapshot contract có version
+Vấn đề
+Phase tồn tại trong tư duy người build, không phải trong core model
+Reducer / guard không biết mình đang ở phase nào
+Không có invariant kiểu:
+“Ở phase X thì action Y là bất hợp pháp”
+📌 Não bộ sống phải biết mình đang trưởng thành, bị thương, hay sắp chết
+➡️ Chưa đạt điều kiện (3)
+4. Core có tự bảo vệ khi bị tổn thương không?
+Kết luận: BẢO VỆ CỤC BỘ, CHƯA BẢO VỆ TOÀN HỆ
+Điểm rất mạnh
+Fail-fast
+Guard test đầy đủ
+Boundary rõ
+Kill-switch tồn tại
+Điểm thiếu sống còn
+Không thấy:
+escalation level
+safe-mode
+runtime lock
+Khi guard fail liên tục:
+core không đổi trạng thái sống
+chỉ reject từng action
+📌 Sinh học thật:
+đau nhiều lần → ngất → khóa hoạt động
+➡️ Chưa đạt điều kiện (4)
+5. Core có attachment-safe không?
+Kết luận: GẦN ĐẠT
+Đạt ở mức cao
+Domain isolation test
+Snapshot isolation
+Guard chặn input xấu
+Module chia context rõ
+👉 Tay chân khó phá invariant.
+Nhưng còn thiếu 1 điểm chí mạng
+Core không biết module nào đang gắn
+Không có:
+module identity
+lifecycle
+trust level
+📌 Não bộ thật:
+biết tay nào là của mình, tay nào bị liệt
+➡️ Chưa đạt hoàn toàn điều kiện (5)
+
+III. KẾT LUẬN AUDIT (NHỊ PHÂN)
+👉 CORE HIỆN TẠI: CHƯA PHẢI LÀ “HỆ THẦN KINH / NÃO BỘ HOÀN CHỈNH”
+⚠️ Rất quan trọng:
+Điều này KHÔNG có nghĩa core yếu hay sai.
+Ngược lại:
+Đây là một hệ thần kinh trung ương cực kỳ khỏe,
+nhưng chưa có “ý thức + quyền điều khiển”.
+
+📋 AUDIT CHECKLIST
+
+I. 🧬 CORE IDENTITY & PURPOSE
+Core này đại diện cho “sự sống” nào của App bán hàng?
+Core có được định nghĩa là chủ thể quyết định, hay chỉ là nơi lưu trạng thái?
+Core có một invariant tối thượng không? (vd: business consistency > UX)
+
+II. 🧠 STATE & MEMORY
+State hiện tại gồm những lớp nào?
+business
+runtime
+system / meta
+Có state nào tồn tại chỉ vì UI / framework không?
+Snapshot có:
+semantic meaning rõ ràng?
+contract bất biến?
+Migration có:
+atomic không?
+rollback không?
+
+III. ⚡ EVENT / SIGNAL FLOW
+Core nhận vào:
+action?
+event?
+intent?
+Core có phân biệt:
+“ý định” vs “hành động đã xảy ra” không?
+Có đường output từ core không, hay chỉ có input?
+
+IV. 🧱 INVARIANT & GUARD
+Invariant được enforce ở đâu?
+Guard có vai trò:
+validation?
+protection?
+escalation?
+Guard có biết ngữ cảnh runtime không?
+Guard fail thì:
+reject?
+log?
+đổi trạng thái hệ?
+
+V. ⏳ RUNTIME & TIME AWARENESS
+Core có khái niệm phase sống không?
+Phase đó:
+chỉ là convention?
+hay là model chính thức?
+Reducer / guard có aware phase không?
+
+VI. 🧯 FAILURE & SELF-PROTECTION
+Core có phân loại lỗi không?
+Có ngưỡng để:
+degrade?
+lock?
+Core có thể tự bảo vệ khỏi module xấu không?
+
+VII. 🧩 MODULE / BODY ATTACHMENT
+Module gắn vào core bằng cơ chế gì?
+Core có:
+biết module tồn tại?
+biết module chết?
+Module có thể:
+spam action?
+phá flow?
+Có khái niệm trust / permission cho module không?
+
+VIII. 👁️ OBSERVABILITY & DIAGNOSIS
+Khi core gặp lỗi:
+có biết không?
+có nhớ không?
+Snapshot có gắn với:
+error?
+runtime state?
+Debug tool có:
+ảnh hưởng production không?
+
+IX. 🧪 TEST COVERAGE (VỀ MẶT SINH HỌC)
+Test đang bảo vệ:
+invariant nào?
+Có điểm chết nào chưa test?
+Test có đảm bảo:
+core không bị mutate?
+domain không bleed?
+
+X. 🧩 BOUNDARIES & NON-GOALS
+Core tuyệt đối không làm gì?
+Có ranh giới rõ giữa:
+core vs service
+core vs UI
+Core có nguy cơ “phình to” không?
+
+
+AUDIT PLAN — CORE NERVOUS SYSTEM
+(build theo đúng checklist, không suy luận chay, không nhảy bước)
+
+I. 🧬 CORE IDENTITY & PURPOSE
+Mục tiêu: xác định core này “là ai” — chủ thể sống hay kho chứa trạng thái
+Bước I.1 — Xác định danh tính core
+Input cần đọc
+AppContext.jsx
+AppRuntime.jsx / AppRuntimeWrapper.jsx
+RuntimeOrchestrator.jsx
+README / SECURITY.md (nếu có mô tả triết lý)
+Câu hỏi kiểm tra
+Core có quyền quyết định hay chỉ ghi nhận?
+Core có thể từ chối hành vi từ module không?
+Core có “final authority” hay không?
+Output
+ Core = Decision authority
+ Core = State hub
+ Core = Hybrid (phải chỉ rõ phần nào)
+Bước I.2 — Invariant tối thượng
+Input
+appReducer.js
+guards/*
+tests/reducers/*
+Câu hỏi
+Có invariant nào được bảo vệ xuyên suốt?
+Invariant đó ưu tiên:
+business
+system safety
+UX
+Invariant có bị phá vì convenience không?
+Output
+Danh sách invariant
+Invariant nào là “bất khả xâm phạm”
+
+II. 🧠 STATE & MEMORY
+Mục tiêu: hiểu “trí nhớ” của não — cái gì là ký ức sống, cái gì là tín hiệu thoáng qua
+Bước II.1 — Phân loại state
+Input
+initialState.js
+AppContext.jsx
+reducers/appReducer.js
+Phân loại bắt buộc
+business
+runtime
+system/meta
+UI/framework-only
+Output
+Bảng phân loại state → lớp → lý do tồn tại
+Bước II.2 — Snapshot semantics
+Input
+runtimeSnapshot.contract.js
+runtimeSnapshot.js
+RuntimeOrchestrator.jsx
+Câu hỏi
+Snapshot đại diện cho thực tại hay view?
+Có semantic drift không?
+Contract có bị phá bởi module không?
+Output
+Snapshot = fact / derived / mixed
+Contract có bất biến không
+Bước II.3 — Migration integrity
+Input
+stateMigrations.j
+tests/context/persistence/*
+Câu hỏi
+Migration có atomic không?
+Có rollback path không?
+Có forward-only không?
+Output
+Migration model: safe / partial / risky
+
+III. ⚡ EVENT / SIGNAL FLOW
+Mục tiêu: hiểu hệ thần kinh dẫn truyền bằng gì
+Bước III.1 — Input taxonomy
+Input
+appReducer.js
+các dispatch trong AppContext / RuntimeOrchestrator
+Xác định
+Core nhận:
+action
+event
+intent
+Có trộn lẫn không?
+Output
+Sơ đồ input vào core
+Bước III.2 — Ý định vs hành động
+Input
+action naming
+reducer logic
+tests/actions
+Câu hỏi
+Core có phân biệt “request” vs “commit” không?
+Có action irreversible không?
+Output
+Có / Không
+Hệ quả nếu không phân biệt
+Bước III.3 — Output channel
+Input
+Context providers
+hooks
+side-effect locations
+Câu hỏi
+Core có output không?
+Output là:
+state
+signal
+effect
+Output
+Core = input-only / bidirectional
+
+IV. 🧱 INVARIANT & GUARD
+Mục tiêu: hệ miễn dịch của não
+
+Bước IV.1 — Guard placement
+Input
+runtime/guards/*
+appReducer.js
+RuntimeBoundary.jsx
+Câu hỏi
+Guard nằm ở:
+entry
+reducer
+runtime
+Có guard chồng chéo không?
+Bước IV.2 — Guard behavior
+Input
+guard code
+guard tests
+Câu hỏi
+Guard làm gì:
+validate
+protect
+escalate
+Guard biết runtime context không?
+Bước IV.3 — Guard failure mode
+Câu hỏi
+Fail → reject?
+Fail → log?
+Fail → mutate system state?
+
+V. ⏳ RUNTIME & TIME AWARENESS
+Mục tiêu: core có “ý thức thời gian sống” không
+Bước V.1 — Phase model
+Input
+RuntimeOrchestrator
+AppRuntime*
+useRuntimeReady
+Câu hỏi
+Phase là convention hay model?
+Phase có formal state không?
+Bước V.2 — Phase awareness
+Câu hỏi
+Reducer aware phase?
+Guard aware phase?
+
+VI. 🧯 FAILURE & SELF-PROTECTION
+Mục tiêu: phản xạ sinh tồn
+Bước VI.1 — Error taxonomy
+Input
+obs/*
+errorSink.js
+normalizeError*
+Bước VI.2 — Degrade / lock
+Câu hỏi
+Có ngưỡng degrade không?
+Có self-lock không?
+Bước VI.3 — Malicious module defense
+Câu hỏi
+Module xấu có thể phá core không?
+
+VII. 🧩 MODULE / BODY ATTACHMENT
+Mục tiêu: gắn tay chân vào não
+Bước VII.1 — Attachment mechanism
+Input
+Provider tree
+wrappers/*
+Bước VII.2 — Module awareness
+Câu hỏi
+Core biết module sống/chết không?
+Bước VII.3 — Trust boundary
+Câu hỏi
+Module có permission không?
+Có rate limit / spam control không?
+
+VIII. 👁️ OBSERVABILITY & DIAGNOSIS
+Bước VIII.1 — Error awareness
+Câu hỏi
+Core có biết nó lỗi không?
+Bước VIII.2 — Snapshot ↔ error
+Câu hỏi
+Error có snapshot đi kèm không?
+Bước VIII.3 — Debug safety
+Câu hỏi
+Debug tool có leak vào prod không?
+
+IX. 🧪 TEST COVERAGE (SINH HỌC)
+Bước IX.1 — Invariant coverage
+Input
+tests/*
+Bước IX.2 — Untested death points
+Câu hỏi
+Có invariant nào không test không?
+
+X. 🧩 BOUNDARIES & NON-GOALS
+Bước X.1 — Absolute NO
+Câu hỏi
+Core tuyệt đối không làm gì?
+Bước X.2 — Boundary clarity
+Câu hỏi
+Core vs UI
+Core vs service
+Bước X.3 — Core obesity risk
+Câu hỏi
+Có dấu hiệu phình to không?
+
+
+“Check trạng thái audit hiện tại”

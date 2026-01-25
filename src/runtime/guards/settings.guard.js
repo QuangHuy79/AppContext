@@ -1,47 +1,31 @@
-// import { Guards } from "../RuntimeGuard";
+/**
+ * 🔒 RUNTIME GUARD
+ * ---------------------------------
+ * Fail-fast only
+ * Silent fail forbidden
+ *
+ * Locked after Phase 6.1
+ */
 
-// export function guardSettings(snapshot) {
-//   const s = snapshot.settings;
-//   if (!s) return false;
-
-//   return Guards.enum(
-//     s.theme,
-//     ["light", "dark", "system"],
-//     "settings.theme",
-//     "RG-SET-01"
-//   );
-// }
-
-// =========================================
-// File final version
+// settings.guard.js — FINAL (FIXED)
 // src/runtime/guards/settings.guard.js
-import { emitError } from "../../obs/errorSink";
-import { Guards } from "../RuntimeGuard";
+import { captureError } from "../../obs/errorSink";
 
 export function guardSettings(snapshot) {
   const s = snapshot?.settings;
+
   if (!s) {
-    emitError({
-      source: "RG-SET-00",
-      message: "snapshot.settings is missing",
-      snapshot,
-    });
+    captureError(new Error("snapshot.settings is missing"), "RG-SET-00");
     return false;
   }
 
-  const valid = Guards.enum(
-    s.theme,
-    ["light", "dark", "system"],
-    "settings.theme",
-    "RG-SET-01"
-  );
-
-  if (!valid) {
-    emitError({
-      source: "RG-SET-01",
-      message: `settings.theme expected one of ['light','dark','system'], got '${s.theme}'`,
-      snapshot,
-    });
+  if (!["light", "dark", "system"].includes(s.theme)) {
+    captureError(
+      new Error(
+        `settings.theme expected one of ['light','dark','system'], got '${s.theme}'`,
+      ),
+      "RG-SET-01",
+    );
     return false;
   }
 

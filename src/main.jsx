@@ -1,33 +1,3 @@
-// // Phiên bản giữ nguyên – chỉ format rõ ràng
-// // src/main.jsx
-// import React from "react";
-// import ReactDOM from "react-dom/client";
-
-// import App from "./App";
-// import ErrorBoundary from "./obs/ErrorBoundary";
-// import { registerGlobalErrors } from "./obs/registerGlobalErrors";
-// import { captureError } from "./obs/errorSink";
-// import { normalizeError } from "./obs/normalizeError";
-
-// function bootstrap() {
-//   // Register global runtime error hooks (E2, E3)
-//   registerGlobalErrors();
-
-//   ReactDOM.createRoot(document.getElementById("root")).render(
-//     <ErrorBoundary>
-//       <App />
-//     </ErrorBoundary>
-//   );
-// }
-
-// try {
-//   bootstrap();
-// } catch (err) {
-//   // E4 – synchronous bootstrap crash
-//   captureError(normalizeError(err, "E4"));
-// }
-
-// ==========================================
 // main.jsx — BẢN SAU KHI FIX (CHUẨN 4.4.3)
 // src/main.jsx
 import React from "react";
@@ -42,7 +12,20 @@ import { StatePersistenceProvider } from "./context/StatePersistenceContext";
 import { registerGlobalErrors } from "./obs/registerGlobalErrors";
 import { captureError } from "./obs/errorSink";
 import { normalizeError } from "./obs/normalizeError";
+import { validateEnv } from "./runtime/env.validate"; // 👈 PHASE 5.1
+import { readFeatureFlags } from "./runtime/featureFlags";
 
+const envResult = validateEnv(import.meta.env);
+
+if (!envResult.ok) {
+  if (import.meta.env.DEV) {
+    throw new Error(envResult.errors.join(" | "));
+  } else {
+    console.error("[ENV INVALID]", envResult.errors);
+    // silent degrade — vẫn cho app chạy
+  }
+}
+const featureFlags = readFeatureFlags(import.meta.env);
 function bootstrap() {
   registerGlobalErrors();
 

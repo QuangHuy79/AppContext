@@ -1,3 +1,12 @@
+/**
+ * 🔒 RUNTIME GUARD
+ * ---------------------------------
+ * Fail-fast only
+ * Silent fail forbidden
+ *
+ * Locked after Phase 6.1
+ */
+
 // File network.guard.js — FINAL
 // src/runtime/guards/network.guard.js
 import { emitError } from "../../obs/errorSink";

@@ -1,0 +1,70 @@
+REAL PRODUCTION ROADMAP (MASTER) - 8 BƯỚC
+Mục tiêu cuối:
+Biến App này thành một “cơ thể sống” có thể gắn Product, Cart, Order, UI thật – không vỡ – không loạn – không phình core
+
+MASTER ROADMAP — 8 BƯỚC (CHUẨN PRODUCTION)
+BƯỚC 0 — CORE NERVOUS SYSTEM (ĐÃ XONG)
+👉 AppContext / Runtime / Guards / OBS / Failure / Boundary
+✔ Core có não, có phản xạ sinh tồn
+✔ Không làm UI, không làm feature
+Đây là nền móng, không quay lại nữa
+
+BƯỚC 1 — DOMAIN ATTACHMENT LAYER (THÂN THỂ)
+👉 Tạo nơi chốn hợp pháp để gắn:
+Product
+Cart
+Order
+User
+Inventory
+👉 Core KHÔNG biết domain cụ thể
+👉 Domain KHÔNG đụng UI
+
+BƯỚC 2 — DOMAIN MODEL STANDARD
+👉 Chuẩn hoá mỗi domain:
+state
+rules
+intent
+lifecycle
+boundary
+👉 Mỗi domain = 1 “cơ quan” độc lập
+👉 Test được riêng
+
+BƯỚC 3 — DOMAIN ↔ CORE CONTRACT
+👉 Luật giao tiếp:
+Domain được dùng gì của Core
+Domain không được phép làm gì
+Cách Core bảo vệ mình khỏi domain xấu
+👉 Chặn “ung thư kiến trúc”
+
+BƯỚC 4 — UI HOST LAYER (NƠI GẮN CHÂN TAY)
+👉 UI không nói chuyện trực tiếp với Core
+👉 UI chỉ nói với Domain Host
+👉 React chỉ là presentation layer
+
+BƯỚC 5 — REAL FEATURE BOOTSTRAP
+👉 Build 1 feature thật end-to-end:
+Product list
+Add to cart
+View cart
+👉 Mục đích: chứng minh kiến trúc sống được, không phải demo
+
+BƯỚC 6 — STATE FLOW & DATA LIFECYCLE
+👉 Dữ liệu đi – về – chết – hồi sinh thế nào:
+fetch
+cache
+persist
+sync
+error
+👉 Không leak, không race, không ghost state
+
+BƯỚC 7 — PRODUCTION HARDENING
+👉 Những thứ chỉ app thật mới cần:
+versioning
+migration
+backward compatibility
+rollback safety
+
+BƯỚC 8 — SCALE & EXTENSION
+👉 Thêm domain mới không đụng core
+👉 Thêm UI mới không đụng domain
+👉 App lớn lên nhưng não không phình

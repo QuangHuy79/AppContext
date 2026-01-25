@@ -1,3 +1,10 @@
+/**
+ * 🔒 CORE RUNTIME FLOW
+ * ---------------------------------
+ * Guard → Snapshot → Runtime
+ * Order is invariant
+ */
+
 // src/runtime/AppRuntime.jsx
 import React from "react";
 

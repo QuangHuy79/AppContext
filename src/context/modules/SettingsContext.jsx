@@ -94,6 +94,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
+import { useMemo } from "react";
 
 /* --------------------------------------------------
    1️⃣ Context (STORE REF ONLY)
@@ -170,13 +171,21 @@ export const SettingsProvider = ({ children }) => {
   /**
    * Context value STABLE
    */
-  const value = {
-    storeRef,
-    setTheme,
-    setLanguage,
-    toggleTheme,
-  };
-
+  // const value = {
+  //   storeRef,
+  //   setTheme,
+  //   setLanguage,
+  //   toggleTheme,
+  // };
+  const value = useMemo(
+    () => ({
+      storeRef,
+      setTheme,
+      setLanguage,
+      toggleTheme,
+    }),
+    [],
+  );
   return (
     <SettingsContext.Provider value={value}>
       {children}

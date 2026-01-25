@@ -1,75 +1,12 @@
-/// / Phiên bản đúng kiến trúc (OBS-07 compliant)
-// import { emitError } from "../../obs/errorSink";
+/**
+ * 🔒 RUNTIME GUARD
+ * ---------------------------------
+ * Fail-fast only
+ * Silent fail forbidden
+ *
+ * Locked after Phase 6.1
+ */
 
-// export function guardDevice(snapshot) {
-//   const device = snapshot?.device;
-
-//   if (!device) {
-//     emitError({
-//       source: "RG-DEV-01",
-//       message: "snapshot.device is missing",
-//       snapshot,
-//     });
-//     return false;
-//   }
-
-//   if (typeof device.userAgent !== "string") {
-//     emitError({
-//       source: "RG-DEV-02",
-//       message: "device.userAgent expected string",
-//       snapshot,
-//     });
-//     return false;
-//   }
-
-//   if (typeof device.platform !== "string") {
-//     emitError({
-//       source: "RG-DEV-03",
-//       message: "device.platform expected string",
-//       snapshot,
-//     });
-//     return false;
-//   }
-
-//   if (device.memory !== null && typeof device.memory !== "number") {
-//     emitError({
-//       source: "RG-DEV-04",
-//       message: "device.memory expected number | null",
-//       snapshot,
-//     });
-//     return false;
-//   }
-
-//   return true;
-// }
-
-// =====================================
-// src/runtime/guards/device.guard.js (FINAL – đã dọn rác)
-// src/runtime/guards/device.guard.js
-
-// export function guardDevice(snapshot) {
-//   const device = snapshot?.device;
-
-//   if (!device) {
-//     return false;
-//   }
-
-//   if (typeof device.userAgent !== "string") {
-//     return false;
-//   }
-
-//   if (typeof device.platform !== "string") {
-//     return false;
-//   }
-
-//   if (device.memory !== null && typeof device.memory !== "number") {
-//     return false;
-//   }
-
-//   return true;
-// }
-
-// ===========================================
 // File device.guard.js — BẢN FINAL
 // src/runtime/guards/device.guard.js
 import { emitError } from "../../obs/errorSink";

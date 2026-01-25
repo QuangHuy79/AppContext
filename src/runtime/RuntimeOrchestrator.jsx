@@ -1,3 +1,10 @@
+/**
+ * 🔒 CORE RUNTIME FLOW
+ * ---------------------------------
+ * Guard → Snapshot → Runtime
+ * Order is invariant
+ */
+
 // FILE FULL — RuntimeOrchestrator.jsx (FIXED — PHASE 3.3 PASS)
 // src/runtime/RuntimeOrchestrator.jsx
 import { useEffect } from "react";

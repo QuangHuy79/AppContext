@@ -1,5 +1,4 @@
 🧱 PHASE 0 — FOUNDATION (DONE ✅)
-Bạn đã hoàn thành phase này, rất ít app làm tới.
 Runtime Snapshot
 Guard system (DEV / PROD split)
 Fail-fast policy
@@ -9,7 +8,7 @@ Context topology rõ ràng
 Phase này đóng băng, không refactor nữa.
 
 🔐 PHASE 1 — PRODUCTION HARDENING (DONE ✅)
-Chính là “PRODUCTION HARDENING – 8 BƯỚC” bạn vừa làm.
+Chính là “PRODUCTION HARDENING – 8 BƯỚC”.
 Snapshot contract
 Runtime guard
 DEV crash / PROD silent
