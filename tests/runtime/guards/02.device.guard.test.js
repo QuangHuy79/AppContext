@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // mock side-effect dependency
-vi.mock("../../../src/obs/errorSink", () => ({
+vi.mock("../../../src/core/obs/errorSink", () => ({
   emitError: vi.fn(),
 }));
 
-import { guardDevice } from "../../../src/runtime/guards/device.guard";
-import { emitError } from "../../../src/obs/errorSink";
+import { guardDevice } from "../../../src/core/runtime/guards/device.guard";
+import { emitError } from "../../../src/core/obs/errorSink";
 
 describe("guardDevice", () => {
   beforeEach(() => {

@@ -2,12 +2,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // 🔒 MOCK errorSink — CHỈ mock captureError
-vi.mock("../../../src/obs/errorSink", () => ({
+vi.mock("../../../src/core/obs/errorSink", () => ({
   captureError: vi.fn(),
 }));
 
-import { captureError } from "../../../src/obs/errorSink";
-import { guardSettings } from "../../../src/runtime/guards/settings.guard";
+import { captureError } from "../../../src/core/obs/errorSink";
+import { guardSettings } from "../../../src/core/runtime/guards/settings.guard";
 
 describe("guardSettings", () => {
   beforeEach(() => {

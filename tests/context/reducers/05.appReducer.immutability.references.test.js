@@ -1,7 +1,7 @@
 // tests/context/reducers/05.appReducer.immutability.references.test.js
 import { describe, it, expect } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 describe("appReducer — IMMUTABILITY (REFERENCE SAFETY)", () => {
   it("RETURN same state reference for unknown action", () => {

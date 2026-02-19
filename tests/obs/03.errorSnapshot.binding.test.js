@@ -1,6 +1,6 @@
 // tests/obs/03.errorSnapshot.binding.test.js
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { captureError } from "../../src/obs/errorSink";
+import { captureError } from "../../src/core/obs/errorSink";
 
 describe("PHASE 8.2 — SNAPSHOT ↔ ERROR BINDING", () => {
   beforeEach(() => {

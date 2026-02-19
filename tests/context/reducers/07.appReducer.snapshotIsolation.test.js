@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 /**
  * PHASE 6.4 — SNAPSHOT ISOLATION (CORRECT INVARIANT)

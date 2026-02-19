@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { reportError, isRuntimeLocked } from "@/obs/errorSink";
+import { reportError, isRuntimeLocked } from "../../src/core/obs/errorSink";
 describe("VI.2 — Runtime self-lock", () => {
   beforeEach(() => {
     window.__APP_ERRORS__ = [];

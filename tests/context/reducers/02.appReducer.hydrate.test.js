@@ -1,14 +1,14 @@
 // tests/context/reducers/02.appReducer.hydrate.test.js
 import { describe, it, expect } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 describe("appReducer — HYDRATE_APP_STATE hardening", () => {
   it("RETURN same state if payload is null / undefined", () => {
     const state = { ...initialAppState };
 
     expect(
-      appReducer(state, { type: "HYDRATE_APP_STATE", payload: null })
+      appReducer(state, { type: "HYDRATE_APP_STATE", payload: null }),
     ).toBe(state);
 
     expect(appReducer(state, { type: "HYDRATE_APP_STATE" })).toBe(state);
@@ -18,11 +18,11 @@ describe("appReducer — HYDRATE_APP_STATE hardening", () => {
     const state = { ...initialAppState };
 
     expect(appReducer(state, { type: "HYDRATE_APP_STATE", payload: 123 })).toBe(
-      state
+      state,
     );
 
     expect(
-      appReducer(state, { type: "HYDRATE_APP_STATE", payload: "bad" })
+      appReducer(state, { type: "HYDRATE_APP_STATE", payload: "bad" }),
     ).toBe(state);
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildSnapshot } from "../../src/obs/buildSnapshot";
+import { buildSnapshot } from "../../src/core/obs/buildSnapshot";
 
 describe("PHASE 6.3 — SNAPSHOT CONTRACT", () => {
   beforeEach(() => {

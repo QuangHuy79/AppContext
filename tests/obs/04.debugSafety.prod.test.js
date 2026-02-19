@@ -1,6 +1,6 @@
 // tests/obs/04.debugSafety.prod.test.js
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { captureError } from "../../src/obs/errorSink";
+import { captureError } from "../../src/core/obs/errorSink";
 
 describe("PHASE 8.3 — DEBUG SAFETY (PROD LEAK GUARD)", () => {
   beforeEach(() => {

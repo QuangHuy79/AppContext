@@ -1,8 +1,8 @@
 // tests/context/reducers/03.appReducer.domainIsolation.hydrate.test.js
 
 import { describe, it, expect } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 describe("appReducer — DOMAIN ISOLATION (HYDRATE)", () => {
   it("HYDRATE: ignores ui domain in payload", () => {

@@ -1,7 +1,7 @@
 // tests/context/persistence/01.schemaDrift.test.js
 import { describe, it, expect } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 describe("PERSISTENCE — SCHEMA DRIFT PROTECTION", () => {
   it("REJECT hydrate when settings schema has unexpected extra keys", () => {

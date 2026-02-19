@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { appReducer } from "../../../src/context/reducers/appReducer";
-import { initialAppState } from "../../../src/context/initialState";
+import { appReducer } from "../../../src/core/context/reducers/appReducer";
+import { initialAppState } from "../../../src/core/context/initialState";
 
 describe("appReducer — IMMUTABILITY (DEEP SAFETY)", () => {
   it("DOES NOT mutate previous nested state", () => {

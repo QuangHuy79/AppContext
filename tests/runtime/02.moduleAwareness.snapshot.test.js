@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSnapshot } from "../../src/obs/buildSnapshot";
+import { buildSnapshot } from "../../src/core/obs/buildSnapshot";
 
 describe("VII.2 — MODULE AWARENESS (COARSE)", () => {
   it("Snapshot does not depend on module existence", () => {

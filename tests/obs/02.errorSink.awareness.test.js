@@ -1,6 +1,6 @@
 // tests/obs/02.errorSink.awareness.test.js
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { captureError } from "../../src/obs/errorSink";
+import { captureError } from "../../src/core/obs/errorSink";
 
 describe("PHASE 8.1 — ERROR AWARENESS", () => {
   beforeEach(() => {

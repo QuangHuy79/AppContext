@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import ToastItem from "./ToastItem";
 import "./ToastProvider.scss";
-import toastService from "../../services/toastService"; // <- import service
+import toastService from "../../core/services/toastService"; // <- import service
 
 const ToastContext = createContext();
 

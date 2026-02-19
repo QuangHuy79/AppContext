@@ -1,0 +1,20 @@
+HỞI ĐỘNG CHAT” — CHỐNG ĐỨT MẠCH 🔒
+Từ chat sau, bạn chỉ cần paste 1 block này, mình sẽ nối đúng mạch cũ:
+CHAT CONTINUITY PROTOCOL
+MASTER_ROADMAP = 8B (LEVEL STEP)
+CURRENT_PHASE = BƯỚC X
+CURRENT_STEP  = X.Y
+CHAT_GOAL     =
+INPUT_ARTIFACTS =
+EXPECTED_OUTPUT =
+STOP_CONDITION =
+
+Ví dụ:
+CHAT CONTINUITY PROTOCOL
+MASTER_ROADMAP = 8B (LEVEL STEP)
+CURRENT_PHASE = BƯỚC 1 — Domain Attachment Layer
+CURRENT_STEP  = 1.1
+CHAT_GOAL     = Define Domain Host skeleton
+INPUT_ARTIFACTS = src/core, src/runtime
+EXPECTED_OUTPUT = domainHost interface + folder structure
+STOP_CONDITION = step 1.1 PASS

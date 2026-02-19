@@ -1,0 +1,102 @@
+BẺ NHỎ 8 BƯỚC — BẢN CHI TIẾT (LEVEL STEP)
+BƯỚC 1 — DOMAIN ATTACHMENT LAYER
+Mục tiêu: tạo “ổ cắm” hợp pháp cho domain, chưa có logic
+1.1 — Xác định Domain Host abstraction (không code domain)
+1.2 — Khai báo Domain registration mechanism
+1.3 — Domain lifecycle hooks (mount / unmount)
+1.4 — Isolation test: domain không chạm core
+PASS: gắn domain giả không phá core
+
+🔹 BƯỚC 2 — DOMAIN MODEL STANDARD
+Mục tiêu: mọi domain cùng 1 chuẩn hình học
+2.1 — Chuẩn domain state shape
+2.2 — Intent / command definition
+2.3 — Rule & invariant layer
+2.4 — Domain boundary & side-effect rule
+2.5 — Unit test domain độc lập
+PASS: domain chạy không cần UI, không cần core thật
+
+🔹 BƯỚC 3 — DOMAIN ↔ CORE CONTRACT
+Mục tiêu: luật giao tiếp + cơ chế tự vệ
+3.1 — Contract API surface (domain được gọi gì)
+3.2 — Forbidden operations (hard block)
+3.3 — Runtime guard cho domain
+3.4 — Malicious domain simulation test
+PASS: domain xấu không giết core
+
+🔹 BƯỚC 4 — UI HOST LAYER
+Mục tiêu: UI có chỗ đứng, không đụng não
+4.1 — UI Host abstraction
+4.2 — Domain → UI binding mechanism
+4.3 — Read-only state exposure
+4.4 — UI intent dispatch flow
+PASS: UI render được nhưng không phá state
+
+🔹 BƯỚC 5 — REAL FEATURE BOOTSTRAP
+Mục tiêu: chứng minh kiến trúc sống
+5.1 — Product domain minimal
+5.2 — Cart domain minimal
+5.3 — Cross-domain interaction
+5.4 — Error + rollback scenario
+PASS: add to cart chạy end-to-end
+Nhưng ý nghĩa kỹ thuật của từng bước được “dịch” lại như sau:
+5.1 — PRODUCT DOMAIN (MINIMAL, ĐÚNG KIỂU CỦA BẠN)
+📍 KHÔNG tạo ProductEntity
+Thay vào đó:
+product.rule.js
+→ kiểm tra product có add được không
+product.intent.js
+→ intent: ADD_TO_CART_REQUESTED
+KHÔNG có state riêng nếu chưa cần
+👉 Product chỉ trả verdict, không mutate state.
+5.2 — CART DOMAIN (MINIMAL)
+cart.state.js
+→ state thuộc AppState
+cart.intent.js
+→ ADD_ITEM / ROLLBACK_ITEM
+cart.rule.js
+→ quantity, consistency
+👉 Cart là domain duy nhất mutate state.
+5.3 — CROSS DOMAIN = domainHost + RuntimeOrchestrator
+Luồng đúng (theo structure):
+UI
+ → Action
+   → RuntimeOrchestrator
+     → domainHost.dispatch(product.intent)
+       → product.rule
+     → domainHost.dispatch(cart.intent)
+       → cart.rule + cart.state
+❗ Không có UseCase class
+❗ Orchestration nằm ở Runtime layer (đã có sẵn)
+5.4 — ERROR + ROLLBACK
+Rollback ở đây =
+Domain error được normalize (obs/normalizeError)
+Reducer không commit state
+UI nhận toast / error boundary
+Snapshot không dirty
+👉 Không saga, không transaction,
+👉 State isolation + reducer purity
+
+🔹 BƯỚC 6 — STATE FLOW & DATA LIFECYCLE
+Mục tiêu: dữ liệu có đời sống rõ ràng
+6.1 — Fetch lifecycle
+6.2 — Cache & invalidation
+6.3 — Persist & rehydrate
+6.4 — Race / ghost state prevention
+PASS: refresh không mất não
+
+🔹 BƯỚC 7 — PRODUCTION HARDENING
+Mục tiêu: app chịu được thời gian
+7.1 — Versioned state
+7.2 — Migration strategy
+7.3 — Rollback safety
+7.4 — Backward compatibility test
+PASS: nâng version không chết app
+
+🔹 BƯỚC 8 — SCALE & EXTENSION
+Mục tiêu: lớn mà không béo
+8.1 — Add new domain without core change
+8.2 — Multiple UI hosts
+8.3 — Performance boundary
+8.4 — Architecture stress test
+PASS: thêm domain như gắn thêm tay
